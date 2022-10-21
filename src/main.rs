@@ -5,6 +5,7 @@ extern crate core;
 use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
 use std::ffi::{c_void};
+use std::mem::size_of;
 use std::ptr;
 
 const WIDTH:u32 = 800;
@@ -40,13 +41,20 @@ fn main() -> Result<(), ()> {
 
     load_gl_functions(&mut window);
 
-    let vertices: [f32; 9] = [
-        -0.5, -0.5, 0.0,
+    let vertices: [f32; 12] = [
+         0.5,  0.5, 0.0,
          0.5, -0.5, 0.0,
-         0.0,  0.5, 0.0
+        -0.5, -0.5, 0.0,
+        -0.5,  0.5, 0.0
+    ];
+
+    let indices: [u32; 6] = [
+        0, 1, 3,
+        1, 2, 3
     ];
 
     let mut vbo: u32 = 0;
+    let mut ebo: u32 = 0;
     let mut vao: u32 = 0;
     let vertex_shader: u32;
     let fragment_shader: u32;
@@ -80,9 +88,13 @@ fn main() -> Result<(), ()> {
 
         gl::GenBuffers(1, &mut vbo);
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER, 9 * 4, vertices.as_ptr() as *const c_void, gl::STATIC_DRAW);
+        gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * size_of::<f32>()) as isize, vertices.as_ptr() as *const c_void, gl::STATIC_DRAW);
 
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * 4, ptr::null::<c_void>());
+        gl::GenBuffers(1, &mut ebo);
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+        gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * size_of::<f32>()) as isize, indices.as_ptr() as *const c_void, gl::STATIC_DRAW);
+
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, (3 * size_of::<f32>()) as i32, ptr::null::<c_void>());
         gl::EnableVertexAttribArray(0);
 
         //Pre draw
@@ -98,7 +110,7 @@ fn main() -> Result<(), ()> {
         unsafe {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            gl::DrawArrays(gl::TRIANGLES, 0, 3);
+            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
         }
 
         window.swap_buffers();
@@ -154,6 +166,7 @@ fn load_gl_functions(window: &mut Window) {
     gl::CreateShader::load_with(|_s| window.get_proc_address("glCreateShader"));
     gl::DeleteShader::load_with(|_s| window.get_proc_address("glDeleteShader"));
     gl::DrawArrays::load_with(|_s| window.get_proc_address("glDrawArrays"));
+    gl::DrawElements::load_with(|_s| window.get_proc_address("glDrawElements"));
     gl::EnableVertexAttribArray::load_with(|_s| window.get_proc_address("glEnableVertexAttribArray"));
     gl::GenBuffers::load_with(|_s| window.get_proc_address("glGenBuffers"));
     gl::GenVertexArrays::load_with(|_s| window.get_proc_address("glGenVertexArrays"));
