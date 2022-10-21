@@ -3,7 +3,10 @@ extern crate glfw;
 extern crate core;
 
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
-use std::ffi::c_void;
+use std::ffi::{c_void, CString};
+
+const WIDTH:u32 = 800;
+const HEIGHT:u32 = 600;
 
 fn main() -> Result<(), ()> {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -11,7 +14,7 @@ fn main() -> Result<(), ()> {
     Glfw::window_hint(&mut glfw, WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
 
     let (mut window, events) = glfw
-        .create_window(800, 600, "Hello this is window", glfw::WindowMode::Windowed)
+        .create_window(WIDTH, HEIGHT, "Hello this is window", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window.");
 
     window.set_key_polling(true);
@@ -32,15 +35,15 @@ fn main() -> Result<(), ()> {
     let fragment_shader: u32;
     let shader_program: u32;
 
-    let vertex_shader_source = include_str!("vs.glsl").as_ptr() as *const *const gl::types::GLchar;
+    let vertex_shader_source = include_str!("vs.glsl");
     let fragment_shader_source = include_str!("fs.glsl").as_ptr() as *const *const gl::types::GLchar;
 
     unsafe {
-        gl::Viewport(0, 0, 800, 600);
+        gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
 
         //Shader
         vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
-        gl::ShaderSource(vertex_shader, 1, vertex_shader_source, &0);
+        gl::ShaderSource(vertex_shader, 1, vertex_shader_source.as_ptr() as *const _, &0);
         gl::CompileShader(vertex_shader);
         check_compile_status_shader(vertex_shader);
 
@@ -91,7 +94,7 @@ fn main() -> Result<(), ()> {
     Ok(())
 }
 
-fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
+fn handle_window_event(window: &mut Window, event: glfw::WindowEvent) {
     match event {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
         _ => {}
