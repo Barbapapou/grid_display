@@ -10,8 +10,8 @@ use std::ptr;
 use quad::Quad;
 use rand::Rng;
 
-const WIDTH:u32 = 800;
-const HEIGHT:u32 = 600;
+const WIDTH:u32 = 1280;
+const HEIGHT:u32 = 720;
 
 const VERTEX_SHADER_SOURCE: &[u8] = b"
 #version 330 core
@@ -73,8 +73,8 @@ fn main() -> Result<(), ()> {
     let mut rng = rand::thread_rng();
     let mut quads: Vec<Quad> = vec![];
 
-    let width = 80;
-    let height = 60;
+    let width = 128;
+    let height = 72;
     let width_f = width as f32;
     let height_f = height as f32;
 
