@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 gl="0.14.0"
+rand = "0.8.5"
 
 [target.'cfg(not(windows))'.dependencies.glfw]
 git = "https://github.com/bjz/glfw-rs.git"

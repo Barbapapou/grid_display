@@ -8,6 +8,7 @@ use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
 use std::ptr;
 use quad::Quad;
+use rand::Rng;
 
 const WIDTH:u32 = 800;
 const HEIGHT:u32 = 600;
@@ -22,9 +23,9 @@ void main() {
 const FRAGMENT_SHADER_SOURCE: &[u8] = b"
 #version 330 core
 out vec4 FragColor;
-
+uniform vec4 uColor;
 void main() {
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+    FragColor = uColor;
 }\0";
 
 fn main() -> Result<(), ()> {
@@ -42,9 +43,9 @@ fn main() -> Result<(), ()> {
 
     load_gl_functions(&mut window);
 
-    let vertex_shader: u32;
-    let fragment_shader: u32;
-    let shader_program: u32;
+    let vertex_shader: GLuint;
+    let fragment_shader: GLuint;
+    let shader_program: GLuint;
 
     unsafe {
         gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
@@ -67,11 +68,26 @@ fn main() -> Result<(), ()> {
         check_link_status_program(shader_program);
         gl::DeleteShader(vertex_shader);
         gl::DeleteShader(fragment_shader);
-
-        gl::UseProgram(shader_program);
     }
 
-    let quad = Quad::new();
+    let mut rng = rand::thread_rng();
+    let mut quads: Vec<Quad> = vec![];
+
+    let width = 80;
+    let height = 60;
+    let width_f = width as f32;
+    let height_f = height as f32;
+
+    for x in 0..width {
+        for y in 0..height {
+            let start_x = ((x as f32)       / width_f ) * 2.0 - 1.0;
+            let end_x =   ((x as f32 + 1.0) / width_f ) * 2.0 - 1.0;
+            let start_y = ((y as f32)       / height_f) * 2.0 - 1.0;
+            let end_y =   ((y as f32 + 1.0) / height_f) * 2.0 - 1.0;
+            let quad = Quad::new(start_x, end_x, start_y, end_y, [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0], shader_program);
+            quads.push(quad);
+        }
+    }
 
     while !window.should_close() {
         for (_, event) in glfw::flush_messages(&events) {
@@ -81,7 +97,9 @@ fn main() -> Result<(), ()> {
         unsafe {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            quad.draw();
+            for quad in quads.as_slice() {
+                quad.draw();
+            }
         }
 
         window.swap_buffers();
@@ -146,8 +164,10 @@ fn load_gl_functions(window: &mut Window) {
     gl::GetProgramiv::load_with(|_s| window.get_proc_address("glGetProgramiv"));
     gl::GetShaderInfoLog::load_with(|_s| window.get_proc_address("glGetShaderInfoLog"));
     gl::GetShaderiv::load_with(|_s| window.get_proc_address("glGetShaderiv"));
+    gl::GetUniformLocation::load_with(|_s| window.get_proc_address("glGetUniformLocation"));
     gl::LinkProgram::load_with(|_s| window.get_proc_address("glLinkProgram"));
     gl::ShaderSource::load_with(|_s| window.get_proc_address("glShaderSource"));
+    gl::Uniform4f::load_with(|_s| window.get_proc_address("glUniform4f"));
     gl::UseProgram::load_with(|_s| window.get_proc_address("glUseProgram"));
     gl::Viewport::load_with(|_s| window.get_proc_address("glViewport"));
     gl::VertexAttribPointer::load_with(|_s| window.get_proc_address("glVertexAttribPointer"));
