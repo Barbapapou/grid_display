@@ -3,7 +3,7 @@ extern crate glfw;
 extern crate core;
 
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
-use std::ffi::{c_void, CString};
+use std::ffi::{c_void};
 
 const WIDTH:u32 = 800;
 const HEIGHT:u32 = 600;
@@ -36,7 +36,7 @@ fn main() -> Result<(), ()> {
     let shader_program: u32;
 
     let vertex_shader_source = include_str!("vs.glsl");
-    let fragment_shader_source = include_str!("fs.glsl").as_ptr() as *const *const gl::types::GLchar;
+    let fragment_shader_source = include_str!("fs.glsl");
 
     unsafe {
         gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
@@ -48,7 +48,7 @@ fn main() -> Result<(), ()> {
         check_compile_status_shader(vertex_shader);
 
         fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
-        gl::ShaderSource(fragment_shader, 1, fragment_shader_source, &0);
+        gl::ShaderSource(fragment_shader, 1, fragment_shader_source.as_ptr() as *const _, &0);
         gl::CompileShader(fragment_shader);
         check_compile_status_shader(fragment_shader);
 
