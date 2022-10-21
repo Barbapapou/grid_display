@@ -102,7 +102,7 @@ fn handle_window_event(window: &mut Window, event: glfw::WindowEvent) {
 }
 
 unsafe fn check_compile_status_shader(shader: u32) {
-    let mut status: i32 = 0;
+    let mut status: i32 = -1;
     let mut length: i32 = 0;
     let mut info_log: Vec<u8> = Vec::with_capacity(512_usize);
     gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
@@ -116,7 +116,7 @@ unsafe fn check_compile_status_shader(shader: u32) {
 
 unsafe fn check_link_status_program(program: u32)
 {
-    let mut status: i32 = 0;
+    let mut status: i32 = -1;
     let mut length: i32 = 0;
     let mut info_log: Vec<u8> = Vec::with_capacity(512_usize);
     gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
