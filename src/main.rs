@@ -1,12 +1,13 @@
 extern crate gl;
 extern crate glfw;
+extern crate core;
 
-use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, WindowHint};
+use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
 use std::ffi::c_void;
 
 fn main() -> Result<(), ()> {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-    Glfw::window_hint(&mut glfw, WindowHint::ContextVersion(4, 6));
+    Glfw::window_hint(&mut glfw, WindowHint::ContextVersion(3, 3));
     Glfw::window_hint(&mut glfw, WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
 
     let (mut window, events) = glfw
@@ -41,15 +42,18 @@ fn main() -> Result<(), ()> {
         vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
         gl::ShaderSource(vertex_shader, 1, vertex_shader_source, &0);
         gl::CompileShader(vertex_shader);
+        check_compile_status_shader(vertex_shader);
 
         fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
         gl::ShaderSource(fragment_shader, 1, fragment_shader_source, &0);
         gl::CompileShader(fragment_shader);
+        check_compile_status_shader(fragment_shader);
 
         shader_program = gl::CreateProgram();
         gl::AttachShader(shader_program, vertex_shader);
         gl::AttachShader(shader_program, fragment_shader);
         gl::LinkProgram(shader_program);
+        check_link_status_program(shader_program);
         gl::DeleteShader(vertex_shader);
         gl::DeleteShader(fragment_shader);
 
@@ -94,7 +98,34 @@ fn handle_window_event(window: &mut glfw::Window, event: glfw::WindowEvent) {
     }
 }
 
-fn load_gl_functions(window: &mut glfw::Window) {
+unsafe fn check_compile_status_shader(shader: u32) {
+    let mut status: i32 = 0;
+    let mut length: i32 = 0;
+    let mut info_log: Vec<u8> = Vec::with_capacity(512_usize);
+    gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
+    if status != gl::TRUE as i32 {
+        gl::GetShaderInfoLog(shader, 512, &mut length, info_log.as_mut_ptr() as *mut _);
+        info_log.set_len(length as usize);
+        let _value = String::from_utf8_lossy(&info_log).to_string();
+        panic!("{_value}");
+    }
+}
+
+unsafe fn check_link_status_program(program: u32)
+{
+    let mut status: i32 = 0;
+    let mut length: i32 = 0;
+    let mut info_log: Vec<u8> = Vec::with_capacity(512_usize);
+    gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
+    if status != gl::TRUE as i32 {
+        gl::GetProgramInfoLog(program, 512, &mut length, info_log.as_mut_ptr() as *mut _);
+        info_log.set_len(length as usize);
+        let _value = String::from_utf8_lossy(&info_log).to_string();
+        panic!("{_value}");
+    }
+}
+
+fn load_gl_functions(window: &mut Window) {
     gl::AttachShader::load_with(|_s| window.get_proc_address("glAttachShader"));
     gl::BindBuffer::load_with(|_s| window.get_proc_address("glBindBuffer"));
     gl::BindVertexArray::load_with(|_s| window.get_proc_address("glBindVertexArray"));
@@ -109,6 +140,10 @@ fn load_gl_functions(window: &mut glfw::Window) {
     gl::EnableVertexAttribArray::load_with(|_s| window.get_proc_address("glEnableVertexAttribArray"));
     gl::GenBuffers::load_with(|_s| window.get_proc_address("glGenBuffers"));
     gl::GenVertexArrays::load_with(|_s| window.get_proc_address("glGenVertexArrays"));
+    gl::GetProgramInfoLog::load_with(|_s| window.get_proc_address("glGetProgramInfoLog"));
+    gl::GetProgramiv::load_with(|_s| window.get_proc_address("glGetProgramiv"));
+    gl::GetShaderInfoLog::load_with(|_s| window.get_proc_address("glGetShaderInfoLog"));
+    gl::GetShaderiv::load_with(|_s| window.get_proc_address("glGetShaderiv"));
     gl::LinkProgram::load_with(|_s| window.get_proc_address("glLinkProgram"));
     gl::ShaderSource::load_with(|_s| window.get_proc_address("glShaderSource"));
     gl::UseProgram::load_with(|_s| window.get_proc_address("glUseProgram"));
