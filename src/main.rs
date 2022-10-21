@@ -2,11 +2,28 @@ extern crate gl;
 extern crate glfw;
 extern crate core;
 
+use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
 use std::ffi::{c_void};
+use std::ptr;
 
 const WIDTH:u32 = 800;
 const HEIGHT:u32 = 600;
+
+const VERTEX_SHADER_SOURCE: &[u8] = b"
+#version 330 core
+layout (location = 0) in vec3 aPos;
+void main() {
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+}\0";
+
+const FRAGMENT_SHADER_SOURCE: &[u8] = b"
+#version 330 core
+out vec4 FragColor;
+
+void main() {
+    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+}\0";
 
 fn main() -> Result<(), ()> {
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -35,20 +52,17 @@ fn main() -> Result<(), ()> {
     let fragment_shader: u32;
     let shader_program: u32;
 
-    let vertex_shader_source = include_str!("vs.glsl");
-    let fragment_shader_source = include_str!("fs.glsl");
-
     unsafe {
         gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
 
         //Shader
         vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
-        gl::ShaderSource(vertex_shader, 1, vertex_shader_source.as_ptr() as *const _, &0);
+        gl::ShaderSource(vertex_shader, 1, [VERTEX_SHADER_SOURCE.as_ptr() as *const GLchar].as_ptr(), ptr::null());
         gl::CompileShader(vertex_shader);
         check_compile_status_shader(vertex_shader);
 
         fragment_shader = gl::CreateShader(gl::FRAGMENT_SHADER);
-        gl::ShaderSource(fragment_shader, 1, fragment_shader_source.as_ptr() as *const _, &0);
+        gl::ShaderSource(fragment_shader, 1, [FRAGMENT_SHADER_SOURCE.as_ptr() as *const GLchar].as_ptr(), ptr::null());
         gl::CompileShader(fragment_shader);
         check_compile_status_shader(fragment_shader);
 
@@ -68,7 +82,7 @@ fn main() -> Result<(), ()> {
         gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         gl::BufferData(gl::ARRAY_BUFFER, 9 * 4, vertices.as_ptr() as *const c_void, gl::STATIC_DRAW);
 
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * 4, std::ptr::null::<c_void>());
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * 4, ptr::null::<c_void>());
         gl::EnableVertexAttribArray(0);
 
         //Pre draw
@@ -103,12 +117,12 @@ fn handle_window_event(window: &mut Window, event: glfw::WindowEvent) {
 
 unsafe fn check_compile_status_shader(shader: u32) {
     let mut status: i32 = -1;
-    let mut length: i32 = 0;
-    let mut info_log: Vec<u8> = Vec::with_capacity(512_usize);
     gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
     if status != gl::TRUE as i32 {
-        gl::GetShaderInfoLog(shader, 512, &mut length, info_log.as_mut_ptr() as *mut _);
-        info_log.set_len(length as usize);
+        let mut error_length: i32 = 0;
+        let mut info_log: Vec<u8> = Vec::with_capacity(512_usize);
+        gl::GetShaderInfoLog(shader, 512, &mut error_length, info_log.as_mut_ptr() as *mut _);
+        info_log.set_len(error_length as usize);
         let _value = String::from_utf8_lossy(&info_log).to_string();
         panic!("{_value}");
     }
@@ -117,12 +131,12 @@ unsafe fn check_compile_status_shader(shader: u32) {
 unsafe fn check_link_status_program(program: u32)
 {
     let mut status: i32 = -1;
-    let mut length: i32 = 0;
-    let mut info_log: Vec<u8> = Vec::with_capacity(512_usize);
     gl::GetProgramiv(program, gl::LINK_STATUS, &mut status);
     if status != gl::TRUE as i32 {
-        gl::GetProgramInfoLog(program, 512, &mut length, info_log.as_mut_ptr() as *mut _);
-        info_log.set_len(length as usize);
+        let mut error_length: i32 = 0;
+        let mut info_log: Vec<u8> = Vec::with_capacity(512_usize);
+        gl::GetProgramInfoLog(program, 512, &mut error_length, info_log.as_mut_ptr() as *mut _);
+        info_log.set_len(error_length as usize);
         let _value = String::from_utf8_lossy(&info_log).to_string();
         panic!("{_value}");
     }
@@ -143,6 +157,7 @@ fn load_gl_functions(window: &mut Window) {
     gl::EnableVertexAttribArray::load_with(|_s| window.get_proc_address("glEnableVertexAttribArray"));
     gl::GenBuffers::load_with(|_s| window.get_proc_address("glGenBuffers"));
     gl::GenVertexArrays::load_with(|_s| window.get_proc_address("glGenVertexArrays"));
+    gl::GetBooleanv::load_with(|_s| window.get_proc_address("GetBooleanv"));
     gl::GetProgramInfoLog::load_with(|_s| window.get_proc_address("glGetProgramInfoLog"));
     gl::GetProgramiv::load_with(|_s| window.get_proc_address("glGetProgramiv"));
     gl::GetShaderInfoLog::load_with(|_s| window.get_proc_address("glGetShaderInfoLog"));
