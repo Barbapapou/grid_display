@@ -1,12 +1,13 @@
+mod quad;
+
 extern crate gl;
 extern crate glfw;
 extern crate core;
 
 use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
-use std::ffi::{c_void};
-use std::mem::size_of;
 use std::ptr;
+use quad::Quad;
 
 const WIDTH:u32 = 800;
 const HEIGHT:u32 = 600;
@@ -41,21 +42,6 @@ fn main() -> Result<(), ()> {
 
     load_gl_functions(&mut window);
 
-    let vertices: [f32; 12] = [
-         0.5,  0.5, 0.0,
-         0.5, -0.5, 0.0,
-        -0.5, -0.5, 0.0,
-        -0.5,  0.5, 0.0
-    ];
-
-    let indices: [u32; 6] = [
-        0, 1, 3,
-        1, 2, 3
-    ];
-
-    let mut vbo: u32 = 0;
-    let mut ebo: u32 = 0;
-    let mut vao: u32 = 0;
     let vertex_shader: u32;
     let fragment_shader: u32;
     let shader_program: u32;
@@ -82,25 +68,10 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(vertex_shader);
         gl::DeleteShader(fragment_shader);
 
-        //Vertex info
-        gl::GenVertexArrays(1, &mut vao);
-        gl::BindVertexArray(vao);
-
-        gl::GenBuffers(1, &mut vbo);
-        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * size_of::<f32>()) as isize, vertices.as_ptr() as *const c_void, gl::STATIC_DRAW);
-
-        gl::GenBuffers(1, &mut ebo);
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-        gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * size_of::<f32>()) as isize, indices.as_ptr() as *const c_void, gl::STATIC_DRAW);
-
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, (3 * size_of::<f32>()) as i32, ptr::null::<c_void>());
-        gl::EnableVertexAttribArray(0);
-
-        //Pre draw
         gl::UseProgram(shader_program);
-        gl::BindVertexArray(vao);
     }
+
+    let quad = Quad::new();
 
     while !window.should_close() {
         for (_, event) in glfw::flush_messages(&events) {
@@ -110,7 +81,7 @@ fn main() -> Result<(), ()> {
         unsafe {
             gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+            quad.draw();
         }
 
         window.swap_buffers();
