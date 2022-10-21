@@ -19,7 +19,11 @@ fn main() -> Result<(), ()> {
 
     load_gl_functions(&mut window);
 
-    let vertices: [f32; 9] = [-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
+    let vertices: [f32; 9] = [
+        -0.5, -0.5, 0.0,
+         0.5, -0.5, 0.0,
+         0.0,  0.5, 0.0
+    ];
 
     let mut vbo: u32 = 0;
     let mut vao: u32 = 0;
