@@ -36,7 +36,7 @@ uniform vec4 uColor;
 void main() {
     // FragColor = uColor;
     // FragColor = mix(texture(uSampler, iUv), uColor, 0.5);
-    FragColor = texture(uSampler, iUv);
+    FragColor = texture(uSampler, iUv) * uColor;
 }\0";
 
 fn main() -> Result<(), ()> {
@@ -57,10 +57,13 @@ fn main() -> Result<(), ()> {
     let vertex_shader: GLuint;
     let fragment_shader: GLuint;
     let shader_program: GLuint;
-    let mut texture:GLuint = 0;
 
     unsafe {
         gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
 
         //Shader
         vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
@@ -80,45 +83,15 @@ fn main() -> Result<(), ()> {
         check_link_status_program(shader_program);
         gl::DeleteShader(vertex_shader);
         gl::DeleteShader(fragment_shader);
-
-        let scale = Scale::uniform(32.0);
-        let data = std::fs::read("DejaVuSansMono.ttf").unwrap();
-        let font = Font::try_from_bytes(&data).unwrap();
-        let glyph = font.glyph('═').scaled(scale).positioned(Point{x:0.0, y:0.0});
-
-        let img_width = 32;
-        let img_height = 32;
-        let mut img = DynamicImage::new_rgba8(img_width as u32, img_height as u32);
-        let bounding_box = glyph.pixel_bounding_box().unwrap();
-        let glyph_offset_x = (img_width - bounding_box.width()) / 2;
-        let glyph_offset_y = (img_height - bounding_box.height()) / 2;
-
-        glyph.draw(|x, y, v| {
-            let x_c = x + glyph_offset_x as u32;
-            let y_c = (img_height - 1) as u32 - (y + glyph_offset_y as u32);
-            img.put_pixel(
-                x_c,
-                y_c,
-                Rgba([(v * 255.0) as u8, (v * 255.0) as u8, (v * 255.0) as u8, (v * 255.0) as u8]),
-            )
-        });
-
-        gl::GenTextures(1, &mut texture);
-        gl::ActiveTexture(gl::TEXTURE0);
-        gl::BindTexture(gl::TEXTURE_2D, texture);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, img_width, img_height, 0, gl::RGBA, gl::UNSIGNED_BYTE, img.as_bytes().as_ptr() as *const c_void);
-        gl::GenerateMipmap(gl::TEXTURE_2D);
     }
 
+    let data = std::fs::read("DejaVuSansMono.ttf").unwrap();
+    let font = Font::try_from_bytes(&data).unwrap();
     let mut rng = rand::thread_rng();
     let mut quads: Vec<Quad> = vec![];
 
-    let width = 16;
-    let height = 9;
+    let width = 16*5;
+    let height = 9*5;
     let width_f = width as f32;
     let height_f = height as f32;
 
@@ -128,7 +101,8 @@ fn main() -> Result<(), ()> {
             let end_x =   ((x as f32 + 1.0) / width_f ) * 2.0 - 1.0;
             let start_y = ((y as f32)       / height_f) * 2.0 - 1.0;
             let end_y =   ((y as f32 + 1.0) / height_f) * 2.0 - 1.0;
-            let quad = Quad::new(start_x, end_x, start_y, end_y, [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0], shader_program);
+            let new_char = char::from_u32(x + width * y).unwrap_or('�');
+            let quad = Quad::new(start_x, end_x, start_y, end_y, [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0], shader_program, &font, new_char);
             quads.push(quad);
         }
     }
