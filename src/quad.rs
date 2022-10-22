@@ -55,9 +55,9 @@ impl Quad {
 
             u_color_location = gl::GetUniformLocation(program, b"uColor\0".as_ptr() as *const GLchar);
 
-            let img_width = 128;
-            let img_height = 128;
-            let scale = Scale::uniform(128.0);
+            let img_width = 16;
+            let img_height = 16;
+            let scale = Scale::uniform(16.0);
 
             let glyph = font.glyph(char).scaled(scale).positioned(Point{x:0.0, y:0.0});
             let mut img = DynamicImage::new_rgba8(img_width as u32, img_height as u32);
@@ -71,7 +71,7 @@ impl Quad {
             glyph.draw(|x, y, v| {
                 let x_c = x + glyph_offset_x as u32;
                 let y_c = (img_height - 1) as u32 - (y + glyph_offset_y as u32);
-                let color = if v > 0.001 {
+                let color = if v > 0.0 {
                     Rgba([255, 255, 255, 255])
                 } else {
                     Rgba([0, 0, 0, 255])
@@ -86,6 +86,10 @@ impl Quad {
             gl::GenTextures(1, &mut texture);
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, texture);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
             gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, img_width, img_height, 0, gl::RGBA, gl::UNSIGNED_BYTE, img.as_bytes().as_ptr() as *const c_void);
             gl::GenerateMipmap(gl::TEXTURE_2D);
         }

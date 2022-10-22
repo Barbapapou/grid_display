@@ -4,15 +4,12 @@ extern crate gl;
 extern crate glfw;
 extern crate core;
 
-use std::ffi::c_void;
 use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
 use std::ptr;
-use image::{DynamicImage, GenericImage, Rgba};
 use quad::Quad;
 use rand::Rng;
-use image::io::Reader as ImageReader;
-use rusttype::{Font, GlyphId, Point, Scale};
+use rusttype::{Font};
 
 const WIDTH:u32 = 1280;
 const HEIGHT:u32 = 720;
@@ -60,10 +57,6 @@ fn main() -> Result<(), ()> {
 
     unsafe {
         gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
 
         //Shader
         vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
@@ -85,7 +78,7 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-    let data = std::fs::read("DejaVuSansMono.ttf").unwrap();
+    let data = std::fs::read("unifont-15.0.01.ttf").unwrap();
     let font = Font::try_from_bytes(&data).unwrap();
     let mut rng = rand::thread_rng();
     let mut quads: Vec<Quad> = vec![];
