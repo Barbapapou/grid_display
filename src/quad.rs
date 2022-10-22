@@ -12,11 +12,11 @@ pub struct Quad {
 
 impl Quad {
     pub fn new(start_x:f32, end_x:f32, start_y:f32, end_y:f32, color: [f32; 4], program: GLuint) -> Quad {
-        let vertices: [f32; 12] = [
-            end_x  ,  end_y  , 0.0,
-            end_x  ,  start_y, 0.0,
-            start_x,  start_y, 0.0,
-            start_x,  end_y  , 0.0
+        let vertices: [f32; 20] = [
+            end_x  ,  end_y  , 0.0, 1.0, 1.0,
+            end_x  ,  start_y, 0.0, 1.0, 0.0,
+            start_x,  start_y, 0.0, 0.0, 0.0,
+            start_x,  end_y  , 0.0, 0.0, 1.0
         ];
 
         let indices: [u32; 6] = [
@@ -41,8 +41,13 @@ impl Quad {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * size_of::<f32>()) as isize, indices.as_ptr() as *const c_void, gl::STATIC_DRAW);
 
-            gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, (3 * size_of::<f32>()) as i32, ptr::null::<c_void>());
+            let stride = (5 * size_of::<f32>()) as i32;
+            gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, stride, ptr::null::<c_void>());
             gl::EnableVertexAttribArray(0);
+
+            let offset = (3 * size_of::<f32>()) as i32;
+            gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, stride, offset as *const c_void);
+            gl::EnableVertexAttribArray(1);
 
             u_color_location = gl::GetUniformLocation(program, b"uColor\0".as_ptr() as *const GLchar);
         }
