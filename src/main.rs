@@ -4,11 +4,15 @@ extern crate gl;
 extern crate glfw;
 extern crate core;
 
+use std::ffi::c_void;
 use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
 use std::ptr;
+use image::{DynamicImage, GenericImage, Rgba};
 use quad::Quad;
 use rand::Rng;
+use image::io::Reader as ImageReader;
+use rusttype::{Font, GlyphId, Point, Scale};
 
 const WIDTH:u32 = 1280;
 const HEIGHT:u32 = 720;
@@ -25,12 +29,14 @@ void main() {
 
 const FRAGMENT_SHADER_SOURCE: &[u8] = b"
 #version 330 core
-in vec4 iUv;
+in vec2 iUv;
 out vec4 FragColor;
+uniform sampler2D uSampler;
 uniform vec4 uColor;
 void main() {
-    FragColor = uColor;
-    // FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
+    // FragColor = uColor;
+    // FragColor = mix(texture(uSampler, iUv), uColor, 0.5);
+    FragColor = texture(uSampler, iUv);
 }\0";
 
 fn main() -> Result<(), ()> {
@@ -51,6 +57,7 @@ fn main() -> Result<(), ()> {
     let vertex_shader: GLuint;
     let fragment_shader: GLuint;
     let shader_program: GLuint;
+    let mut texture:GLuint = 0;
 
     unsafe {
         gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
@@ -74,14 +81,44 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(vertex_shader);
         gl::DeleteShader(fragment_shader);
 
-        gl::UseProgram(shader_program);
+        let scale = Scale::uniform(32.0);
+        let data = std::fs::read("DejaVuSansMono.ttf").unwrap();
+        let font = Font::try_from_bytes(&data).unwrap();
+        let glyph = font.glyph('═').scaled(scale).positioned(Point{x:0.0, y:0.0});
+
+        let img_width = 32;
+        let img_height = 32;
+        let mut img = DynamicImage::new_rgba8(img_width as u32, img_height as u32);
+        let bounding_box = glyph.pixel_bounding_box().unwrap();
+        let glyph_offset_x = (img_width - bounding_box.width()) / 2;
+        let glyph_offset_y = (img_height - bounding_box.height()) / 2;
+
+        glyph.draw(|x, y, v| {
+            let x_c = x + glyph_offset_x as u32;
+            let y_c = (img_height - 1) as u32 - (y + glyph_offset_y as u32);
+            img.put_pixel(
+                x_c,
+                y_c,
+                Rgba([(v * 255.0) as u8, (v * 255.0) as u8, (v * 255.0) as u8, (v * 255.0) as u8]),
+            )
+        });
+
+        gl::GenTextures(1, &mut texture);
+        gl::ActiveTexture(gl::TEXTURE0);
+        gl::BindTexture(gl::TEXTURE_2D, texture);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, img_width, img_height, 0, gl::RGBA, gl::UNSIGNED_BYTE, img.as_bytes().as_ptr() as *const c_void);
+        gl::GenerateMipmap(gl::TEXTURE_2D);
     }
 
     let mut rng = rand::thread_rng();
     let mut quads: Vec<Quad> = vec![];
 
-    let width = 128;
-    let height = 72;
+    let width = 16;
+    let height = 9;
     let width_f = width as f32;
     let height_f = height as f32;
 
@@ -169,8 +206,10 @@ unsafe fn check_link_status_program(program: u32)
 }
 
 fn load_gl_functions(window: &mut Window) {
+    gl::ActiveTexture::load_with(|_s| window.get_proc_address("glActiveTexture"));
     gl::AttachShader::load_with(|_s| window.get_proc_address("glAttachShader"));
     gl::BindBuffer::load_with(|_s| window.get_proc_address("glBindBuffer"));
+    gl::BindTexture::load_with(|_s| window.get_proc_address("glBindTexture"));
     gl::BindVertexArray::load_with(|_s| window.get_proc_address("glBindVertexArray"));
     gl::BufferData::load_with(|_s| window.get_proc_address("glBufferData"));
     gl::Clear::load_with(|_s| window.get_proc_address("glClear"));
@@ -183,6 +222,8 @@ fn load_gl_functions(window: &mut Window) {
     gl::DrawElements::load_with(|_s| window.get_proc_address("glDrawElements"));
     gl::EnableVertexAttribArray::load_with(|_s| window.get_proc_address("glEnableVertexAttribArray"));
     gl::GenBuffers::load_with(|_s| window.get_proc_address("glGenBuffers"));
+    gl::GenerateMipmap::load_with(|_s| window.get_proc_address("glGenerateMipmap"));
+    gl::GenTextures::load_with(|_s| window.get_proc_address("glGenTextures"));
     gl::GenVertexArrays::load_with(|_s| window.get_proc_address("glGenVertexArrays"));
     gl::GetBooleanv::load_with(|_s| window.get_proc_address("GetBooleanv"));
     gl::GetProgramInfoLog::load_with(|_s| window.get_proc_address("glGetProgramInfoLog"));
@@ -192,6 +233,8 @@ fn load_gl_functions(window: &mut Window) {
     gl::GetUniformLocation::load_with(|_s| window.get_proc_address("glGetUniformLocation"));
     gl::LinkProgram::load_with(|_s| window.get_proc_address("glLinkProgram"));
     gl::ShaderSource::load_with(|_s| window.get_proc_address("glShaderSource"));
+    gl::TexImage2D::load_with(|_s| window.get_proc_address("glTexImage2D"));
+    gl::TexParameteri::load_with(|_s| window.get_proc_address("glTexParameteri"));
     gl::Uniform4f::load_with(|_s| window.get_proc_address("glUniform4f"));
     gl::UseProgram::load_with(|_s| window.get_proc_address("glUseProgram"));
     gl::Viewport::load_with(|_s| window.get_proc_address("glViewport"));
