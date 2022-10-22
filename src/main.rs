@@ -68,6 +68,8 @@ fn main() -> Result<(), ()> {
         check_link_status_program(shader_program);
         gl::DeleteShader(vertex_shader);
         gl::DeleteShader(fragment_shader);
+
+        gl::UseProgram(shader_program);
     }
 
     let mut rng = rand::thread_rng();
@@ -95,7 +97,6 @@ fn main() -> Result<(), ()> {
         }
 
         unsafe {
-            gl::ClearColor(0.2, 0.3, 0.3, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
             for quad in quads.as_slice() {
                 quad.draw();
@@ -112,8 +113,27 @@ fn main() -> Result<(), ()> {
 fn handle_window_event(window: &mut Window, event: glfw::WindowEvent) {
     match event {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
+        glfw::WindowEvent::FramebufferSize(width, height) => framebuffer_resize_event(width as f32, height as f32),
         _ => {}
     }
+}
+
+fn framebuffer_resize_event(width: f32, height:f32) {
+    let aspect_ratio = WIDTH as f32 / HEIGHT as f32;
+    let mut width_c = width;
+    let mut height_c = height;
+    if width < height {
+        height_c = 1.0/aspect_ratio * width_c;
+    } else {
+        width_c = aspect_ratio * height_c;
+        if width_c > width {
+            width_c = width;
+            height_c = 1.0/aspect_ratio * width_c;
+        }
+    }
+    let offset_w = (width - width_c) / 2.0;
+    let offset_h = (height - height_c) / 2.0;
+    unsafe { gl::Viewport(offset_w as i32, offset_h as i32, width_c as i32, height_c as i32); }
 }
 
 unsafe fn check_compile_status_shader(shader: u32) {
