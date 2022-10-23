@@ -4,6 +4,7 @@ use std::ptr;
 use gl::types::*;
 use image::{DynamicImage, GenericImage, Rgba};
 use rusttype::{Font, Point, Rect, Scale};
+use crate::glyph_info::GlyphInfo;
 
 pub struct Quad {
     vao: u32,
@@ -31,7 +32,6 @@ impl Quad {
         let mut ebo: u32 = 0;
         let mut vao: u32 = 0;
         let u_color_location: GLint;
-        let mut texture: u32 = 0;
 
         unsafe {
             gl::GenVertexArrays(1, &mut vao);
@@ -54,45 +54,8 @@ impl Quad {
             gl::EnableVertexAttribArray(1);
 
             u_color_location = gl::GetUniformLocation(program, b"uColor\0".as_ptr() as *const GLchar);
-
-            let img_width = 16;
-            let img_height = 16;
-            let scale = Scale::uniform(16.0);
-
-            let glyph = font.glyph(char).scaled(scale).positioned(Point{x:0.0, y:0.0});
-            let mut img = DynamicImage::new_rgba8(img_width as u32, img_height as u32);
-            let bounding_box = glyph.pixel_bounding_box().unwrap_or(Rect{ min: Point { x: 0, y: 0 },  max: Point { x: 0, y: 0 }});
-            let glyph_width = bounding_box.width();
-            let glyph_height = bounding_box.height();
-            println!("char:{char}, width:{glyph_width}, height:{glyph_height}");
-            let glyph_offset_x = (img_width - glyph_width) / 2;
-            let glyph_offset_y = (img_height - glyph_height) / 2;
-
-            glyph.draw(|x, y, v| {
-                let x_c = x + glyph_offset_x as u32;
-                let y_c = (img_height - 1) as u32 - (y + glyph_offset_y as u32);
-                let color = if v > 0.0 {
-                    Rgba([255, 255, 255, 255])
-                } else {
-                    Rgba([0, 0, 0, 255])
-                };
-                img.put_pixel(
-                    x_c,
-                    y_c,
-                    color,
-                )
-            });
-
-            gl::GenTextures(1, &mut texture);
-            gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindTexture(gl::TEXTURE_2D, texture);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
-            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, img_width, img_height, 0, gl::RGBA, gl::UNSIGNED_BYTE, img.as_bytes().as_ptr() as *const c_void);
-            gl::GenerateMipmap(gl::TEXTURE_2D);
         }
+        let texture = GlyphInfo::get_glyph_texture(char, font);
 
         Quad {
             vao,

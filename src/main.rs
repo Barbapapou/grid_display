@@ -1,15 +1,18 @@
 mod quad;
+mod glyph_info;
 
 extern crate gl;
 extern crate glfw;
 extern crate core;
 
+use std::collections::HashMap;
 use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
 use std::ptr;
 use quad::Quad;
 use rand::Rng;
 use rusttype::{Font};
+use crate::glyph_info::GLYPH_CACHE;
 
 const WIDTH:u32 = 1280;
 const HEIGHT:u32 = 720;
@@ -37,6 +40,11 @@ void main() {
 }\0";
 
 fn main() -> Result<(), ()> {
+
+    unsafe{
+        GLYPH_CACHE = Some(HashMap::new());
+    };
+
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
     Glfw::window_hint(&mut glfw, WindowHint::ContextVersion(3, 3));
     Glfw::window_hint(&mut glfw, WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
@@ -83,8 +91,8 @@ fn main() -> Result<(), ()> {
     let mut rng = rand::thread_rng();
     let mut quads: Vec<Quad> = vec![];
 
-    let width = 16*5;
-    let height = 9*5;
+    let width = 16;
+    let height = 9;
     let width_f = width as f32;
     let height_f = height as f32;
 
