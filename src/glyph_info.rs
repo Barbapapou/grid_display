@@ -35,7 +35,7 @@ impl GlyphInfo {
         let bounding_box = glyph.pixel_bounding_box().unwrap_or(Rect{ min: Point { x: 0, y: 0 },  max: Point { x: 0, y: 0 }});
         let glyph_width = bounding_box.width();
         let glyph_height = bounding_box.height();
-        println!("char:{char}, width:{glyph_width}, height:{glyph_height}");
+        // println!("char:{char}, width:{glyph_width}, height:{glyph_height}");
         let glyph_offset_x = (IMG_WIDTH - glyph_width) / 2;
         let glyph_offset_y = (IMG_HEIGHT - glyph_height) / 2;
 

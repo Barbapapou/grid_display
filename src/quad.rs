@@ -84,4 +84,8 @@ impl Quad {
     pub fn switch_char(&mut self, char: char) {
         self.texture = GlyphInfo::get_glyph_texture(char);
     }
+
+    pub fn switch_fg_color(&mut self, color: [f32; 4]){
+        self.fg_color = color;
+    }
 }

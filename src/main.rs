@@ -123,10 +123,12 @@ fn main() -> Result<(), ()> {
             handle_window_event(&mut window, event);
         }
 
-        // for quad in quads.as_mut_slice() {
-        //     let char = char::from_u32((rng.gen::<f32>() * 65000.0) as u32).unwrap_or('a');
-        //     quad.switch_char(char);
-        // }
+        for quad in quads.as_mut_slice() {
+            let char = char::from_u32((rng.gen::<f32>() * 10.0) as u32).unwrap_or('a');
+            let fg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
+            quad.switch_char(char);
+            quad.switch_fg_color(fg_color);
+        }
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
