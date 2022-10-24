@@ -2,20 +2,21 @@ use std::mem::size_of;
 use std::os::raw::c_void;
 use std::ptr;
 use gl::types::*;
-use image::{DynamicImage, GenericImage, Rgba};
-use rusttype::{Font, Point, Rect, Scale};
+use rusttype::{Font};
 use crate::glyph_info::GlyphInfo;
 
 pub struct Quad {
     vao: u32,
     program: GLuint,
-    u_color_location: GLint,
-    color: [f32; 4],
+    u_fg_color_location: GLint,
+    u_bg_color_location: GLint,
+    fg_color: [f32; 4],
+    bg_color: [f32; 4],
     texture: GLuint,
 }
 
 impl Quad {
-    pub fn new(start_x:f32, end_x:f32, start_y:f32, end_y:f32, color: [f32; 4], program: GLuint, font: &Font, char: char) -> Quad {
+    pub fn new(start_x:f32, end_x:f32, start_y:f32, end_y:f32, fg_color: [f32; 4], bg_color: [f32; 4], program: GLuint, font: &Font, char: char) -> Quad {
         let vertices: [f32; 20] = [
             end_x  ,  end_y  , 0.0, 1.0, 1.0,
             end_x  ,  start_y, 0.0, 1.0, 0.0,
@@ -31,7 +32,8 @@ impl Quad {
         let mut vbo: u32 = 0;
         let mut ebo: u32 = 0;
         let mut vao: u32 = 0;
-        let u_color_location: GLint;
+        let u_fg_color_location: GLint;
+        let u_bg_color_location: GLint;
 
         unsafe {
             gl::GenVertexArrays(1, &mut vao);
@@ -53,15 +55,18 @@ impl Quad {
             gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, stride, offset as *const c_void);
             gl::EnableVertexAttribArray(1);
 
-            u_color_location = gl::GetUniformLocation(program, b"uColor\0".as_ptr() as *const GLchar);
+            u_fg_color_location = gl::GetUniformLocation(program, b"uFgColor\0".as_ptr() as *const GLchar);
+            u_bg_color_location = gl::GetUniformLocation(program, b"uBgColor\0".as_ptr() as *const GLchar);
         }
         let texture = GlyphInfo::get_glyph_texture(char, font);
 
         Quad {
             vao,
             program,
-            u_color_location,
-            color,
+            u_fg_color_location,
+            u_bg_color_location,
+            fg_color,
+            bg_color,
             texture
         }
     }
@@ -69,7 +74,8 @@ impl Quad {
     pub unsafe fn draw(&self) {
         gl::BindVertexArray(self.vao);
         gl::UseProgram(self.program);
-        gl::Uniform4f(self.u_color_location, self.color[0], self.color[1], self.color[2], self.color[3]);
+        gl::Uniform4f(self.u_fg_color_location, self.fg_color[0], self.fg_color[1], self.fg_color[2], self.fg_color[3]);
+        gl::Uniform4f(self.u_bg_color_location, self.bg_color[0], self.bg_color[1], self.bg_color[2], self.bg_color[3]);
         gl::BindTexture(gl::TEXTURE_2D, self.texture);
         gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
         gl::BindVertexArray(0);

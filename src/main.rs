@@ -32,11 +32,13 @@ const FRAGMENT_SHADER_SOURCE: &[u8] = b"
 in vec2 iUv;
 out vec4 FragColor;
 uniform sampler2D uSampler;
-uniform vec4 uColor;
+uniform vec4 uFgColor;
+uniform vec4 uBgColor;
 void main() {
     // FragColor = uColor;
-    // FragColor = mix(texture(uSampler, iUv), uColor, 0.5);
-    FragColor = texture(uSampler, iUv) * uColor;
+    vec4 textureSample = texture(uSampler, iUv);
+    if (textureSample.r > 0.5f) FragColor = uFgColor;
+    else FragColor = uBgColor;
 }\0";
 
 fn main() -> Result<(), ()> {
@@ -103,7 +105,9 @@ fn main() -> Result<(), ()> {
             let start_y = ((y as f32)       / height_f) * 2.0 - 1.0;
             let end_y =   ((y as f32 + 1.0) / height_f) * 2.0 - 1.0;
             let new_char = char::from_u32(x + width * y).unwrap_or('�');
-            let quad = Quad::new(start_x, end_x, start_y, end_y, [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0], shader_program, &font, new_char);
+            let fg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
+            let bg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
+            let quad = Quad::new(start_x, end_x, start_y, end_y, fg_color, bg_color, shader_program, &font, new_char);
             quads.push(quad);
         }
     }
