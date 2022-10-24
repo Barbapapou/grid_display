@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
 use std::ptr;
+use std::time::Instant;
 use quad::Quad;
 use rand::Rng;
 use rusttype::{Font};
@@ -37,7 +38,7 @@ uniform vec4 uBgColor;
 void main() {
     // FragColor = uColor;
     vec4 textureSample = texture(uSampler, iUv);
-    if (textureSample.r > 0.5f) FragColor = uFgColor;
+    if (textureSample.r > 0.0f) FragColor = uFgColor * textureSample;
     else FragColor = uBgColor;
 }\0";
 
@@ -93,10 +94,13 @@ fn main() -> Result<(), ()> {
     let mut rng = rand::thread_rng();
     let mut quads: Vec<Quad> = vec![];
 
-    let width = 16;
-    let height = 9;
+    let width = 16 * 5;
+    let height = 9 * 5;
     let width_f = width as f32;
     let height_f = height as f32;
+
+    let text: Vec<char> = "Tema la taille de la glyphe.".chars().collect();
+    let len_text = text.len();
 
     for x in 0..width {
         for y in 0..height {
@@ -104,17 +108,24 @@ fn main() -> Result<(), ()> {
             let end_x =   ((x as f32 + 1.0) / width_f ) * 2.0 - 1.0;
             let start_y = ((y as f32)       / height_f) * 2.0 - 1.0;
             let end_y =   ((y as f32 + 1.0) / height_f) * 2.0 - 1.0;
-            let new_char = char::from_u32(x + width * y).unwrap_or('�');
+            let new_char = text[(x + width * y) % len_text];
+            // let new_char = char::from_u32(x + width * y).unwrap_or('�');
             let fg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
-            let bg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
-            let quad = Quad::new(start_x, end_x, start_y, end_y, fg_color, bg_color, shader_program, &font, new_char);
+            let bg_color = [0.0, 0.0, 0.0, 1.0];
+            let quad = Quad::new([start_x, end_x, start_y, end_y], fg_color, bg_color, shader_program, &font, new_char);
             quads.push(quad);
         }
     }
 
     while !window.should_close() {
+        let now = Instant::now();
         for (_, event) in glfw::flush_messages(&events) {
             handle_window_event(&mut window, event);
+        }
+
+        for quad in quads.as_mut_slice() {
+            let char = char::from_u32((rng.gen::<f32>() * 65000.0) as u32).unwrap_or('a');
+            quad.switch_char(char, &font);
         }
 
         unsafe {
@@ -126,6 +137,8 @@ fn main() -> Result<(), ()> {
 
         window.swap_buffers();
         glfw.poll_events();
+        let time_elapsed = now.elapsed().as_millis();
+        println!("{time_elapsed}");
     }
 
     Ok(())

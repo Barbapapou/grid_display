@@ -16,12 +16,12 @@ pub struct Quad {
 }
 
 impl Quad {
-    pub fn new(start_x:f32, end_x:f32, start_y:f32, end_y:f32, fg_color: [f32; 4], bg_color: [f32; 4], program: GLuint, font: &Font, char: char) -> Quad {
+    pub fn new(position: [f32; 4], fg_color: [f32; 4], bg_color: [f32; 4], program: GLuint, font: &Font, char: char) -> Quad {
         let vertices: [f32; 20] = [
-            end_x  ,  end_y  , 0.0, 1.0, 1.0,
-            end_x  ,  start_y, 0.0, 1.0, 0.0,
-            start_x,  start_y, 0.0, 0.0, 0.0,
-            start_x,  end_y  , 0.0, 0.0, 1.0
+            position[1],  position[3], 0.0, 1.0, 1.0,
+            position[1],  position[2], 0.0, 1.0, 0.0,
+            position[0],  position[2], 0.0, 0.0, 0.0,
+            position[0],  position[3], 0.0, 0.0, 1.0
         ];
 
         let indices: [u32; 6] = [
@@ -58,6 +58,7 @@ impl Quad {
             u_fg_color_location = gl::GetUniformLocation(program, b"uFgColor\0".as_ptr() as *const GLchar);
             u_bg_color_location = gl::GetUniformLocation(program, b"uBgColor\0".as_ptr() as *const GLchar);
         }
+
         let texture = GlyphInfo::get_glyph_texture(char, font);
 
         Quad {
@@ -79,5 +80,9 @@ impl Quad {
         gl::BindTexture(gl::TEXTURE_2D, self.texture);
         gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
         gl::BindVertexArray(0);
+    }
+
+    pub fn switch_char(&mut self, char: char, font: &Font) {
+        self.texture = GlyphInfo::get_glyph_texture(char, font);
     }
 }
