@@ -9,6 +9,7 @@ const IMG_HEIGHT: i32 = 32;
 const SCALE_GLYPH: Scale = Scale { x: 32.0, y: 32.0 };
 
 pub static mut GLYPH_CACHE: Option<HashMap<char, GlyphInfo>> = None;
+pub static mut FONT: Option<Font> = None;
 
 #[derive(Clone, Copy)]
 pub struct GlyphInfo {
@@ -17,19 +18,19 @@ pub struct GlyphInfo {
 
 impl GlyphInfo {
 
-    pub fn get_glyph_texture(char: char, font: &Font) -> u32 {
+    pub fn get_glyph_texture(char: char) -> u32 {
         let glyph_cache = unsafe { GLYPH_CACHE.as_mut().unwrap() };
         let mut glyph_info = glyph_cache.get(&char); //.unwrap_or();
         let temp;
         if glyph_info.is_none() {
-            temp = GlyphInfo::generate_new_entry(char, font);
+            temp = GlyphInfo::generate_new_entry(char);
             glyph_info = Some(&temp);
         }
         glyph_info.unwrap().texture
     }
 
-    pub fn generate_new_entry(char: char, font: &Font) -> GlyphInfo {
-        let glyph = font.glyph(char).scaled(SCALE_GLYPH).positioned(Point{x:0.0, y:0.0});
+    pub fn generate_new_entry(char: char) -> GlyphInfo {
+        let glyph = unsafe { FONT.as_ref().unwrap().glyph(char).scaled(SCALE_GLYPH).positioned(Point{x:0.0, y:0.0}) };
         let mut img = DynamicImage::new_rgba8(IMG_WIDTH as u32, IMG_HEIGHT as u32);
         let bounding_box = glyph.pixel_bounding_box().unwrap_or(Rect{ min: Point { x: 0, y: 0 },  max: Point { x: 0, y: 0 }});
         let glyph_width = bounding_box.width();

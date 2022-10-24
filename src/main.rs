@@ -13,7 +13,7 @@ use std::time::Instant;
 use quad::Quad;
 use rand::Rng;
 use rusttype::{Font};
-use crate::glyph_info::GLYPH_CACHE;
+use crate::glyph_info::{FONT, GLYPH_CACHE};
 
 const WIDTH:u32 = 1280;
 const HEIGHT:u32 = 720;
@@ -42,10 +42,12 @@ void main() {
     else FragColor = uBgColor;
 }\0";
 
-fn main() -> Result<(), ()> {
+const FONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
 
+fn main() -> Result<(), ()> {
     unsafe{
         GLYPH_CACHE = Some(HashMap::new());
+        FONT = Font::try_from_bytes(FONT_DATA);
     };
 
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -89,8 +91,6 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-    let data = std::fs::read("unifont-15.0.01.ttf").unwrap();
-    let font = Font::try_from_bytes(&data).unwrap();
     let mut rng = rand::thread_rng();
     let mut quads: Vec<Quad> = vec![];
 
@@ -112,7 +112,7 @@ fn main() -> Result<(), ()> {
             // let new_char = char::from_u32(x + width * y).unwrap_or('�');
             let fg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
             let bg_color = [0.0, 0.0, 0.0, 1.0];
-            let quad = Quad::new([start_x, end_x, start_y, end_y], fg_color, bg_color, shader_program, &font, new_char);
+            let quad = Quad::new([start_x, end_x, start_y, end_y], fg_color, bg_color, shader_program, new_char);
             quads.push(quad);
         }
     }
@@ -123,10 +123,10 @@ fn main() -> Result<(), ()> {
             handle_window_event(&mut window, event);
         }
 
-        for quad in quads.as_mut_slice() {
-            let char = char::from_u32((rng.gen::<f32>() * 65000.0) as u32).unwrap_or('a');
-            quad.switch_char(char, &font);
-        }
+        // for quad in quads.as_mut_slice() {
+        //     let char = char::from_u32((rng.gen::<f32>() * 65000.0) as u32).unwrap_or('a');
+        //     quad.switch_char(char);
+        // }
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);

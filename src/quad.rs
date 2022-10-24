@@ -2,7 +2,6 @@ use std::mem::size_of;
 use std::os::raw::c_void;
 use std::ptr;
 use gl::types::*;
-use rusttype::{Font};
 use crate::glyph_info::GlyphInfo;
 
 pub struct Quad {
@@ -16,7 +15,7 @@ pub struct Quad {
 }
 
 impl Quad {
-    pub fn new(position: [f32; 4], fg_color: [f32; 4], bg_color: [f32; 4], program: GLuint, font: &Font, char: char) -> Quad {
+    pub fn new(position: [f32; 4], fg_color: [f32; 4], bg_color: [f32; 4], program: GLuint, char: char) -> Quad {
         let vertices: [f32; 20] = [
             position[1],  position[3], 0.0, 1.0, 1.0,
             position[1],  position[2], 0.0, 1.0, 0.0,
@@ -59,7 +58,7 @@ impl Quad {
             u_bg_color_location = gl::GetUniformLocation(program, b"uBgColor\0".as_ptr() as *const GLchar);
         }
 
-        let texture = GlyphInfo::get_glyph_texture(char, font);
+        let texture = GlyphInfo::get_glyph_texture(char);
 
         Quad {
             vao,
@@ -82,7 +81,7 @@ impl Quad {
         gl::BindVertexArray(0);
     }
 
-    pub fn switch_char(&mut self, char: char, font: &Font) {
-        self.texture = GlyphInfo::get_glyph_texture(char, font);
+    pub fn switch_char(&mut self, char: char) {
+        self.texture = GlyphInfo::get_glyph_texture(char);
     }
 }
