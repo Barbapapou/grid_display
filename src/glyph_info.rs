@@ -20,8 +20,8 @@ impl GlyphInfo {
 
     pub fn get_glyph_texture(char: char) -> u32 {
         let glyph_cache = unsafe { GLYPH_CACHE.as_mut().unwrap() };
-        let mut glyph_info = glyph_cache.get(&char); //.unwrap_or();
-        let temp;
+        let mut glyph_info = glyph_cache.get(&char);
+        let temp; // avoid lifetime issues
         if glyph_info.is_none() {
             temp = GlyphInfo::generate_new_entry(char);
             glyph_info = Some(&temp);
