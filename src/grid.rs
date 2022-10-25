@@ -59,7 +59,7 @@ impl Grid {
         let mut text_len = text_vec.len() as i32;
         let start_position = y * self.width + x;
         if start_position + text_len > self.quads.len() as i32 - 1 {
-            let to_trim = start_position + text_len - self.quads.len() as i32 - 1;
+            let to_trim = start_position + (text_len - 1) - (self.quads.len() as i32 - 1);
             text_len -= to_trim;
         }
         for text_index in 0..text_len {
