@@ -97,6 +97,7 @@ fn main() -> Result<(), ()> {
     let height = 9 * 5;
 
     let mut grid = Grid::new(width, height, shader_program);
+    let mut time_last_frame = String::new();
 
     while !window.should_close() {
         let now = Instant::now();
@@ -105,6 +106,7 @@ fn main() -> Result<(), ()> {
         }
 
         grid.shuffle_glyph();
+        grid.write_at(0, 0, &time_last_frame);
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -114,7 +116,7 @@ fn main() -> Result<(), ()> {
         window.swap_buffers();
         glfw.poll_events();
         let time_elapsed = now.elapsed().as_millis();
-        println!("{time_elapsed}");
+        time_last_frame = format!("{time_elapsed} ms");
     }
 
     Ok(())
