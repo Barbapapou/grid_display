@@ -15,20 +15,15 @@ impl Grid {
         let width_f = width as f32;
         let height_f = height as f32;
 
-        let text: Vec<char> = "Tema la taille de la glyphe.".chars().collect();
-        let len_text = text.len() as i32;
-
         for y in 0..height {
             for x in 0..width {
                 let start_x = ((x as f32)       / width_f ) * 2.0 - 1.0;
                 let end_x =   ((x as f32 + 1.0) / width_f ) * 2.0 - 1.0;
                 let start_y = ((y as f32)       / height_f) * 2.0 - 1.0;
                 let end_y =   ((y as f32 + 1.0) / height_f) * 2.0 - 1.0;
-                let new_char = text[((x + width * y) % len_text) as usize];
-                // let new_char = char::from_u32(x + width * y).unwrap_or('�');
-                let fg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
+                let fg_color = [1.0, 1.0, 1.0, 1.0];
                 let bg_color = [0.0, 0.0, 0.0, 1.0];
-                let quad = Quad::new([start_x, end_x, start_y, end_y], fg_color, bg_color, shader_program, new_char);
+                let quad = Quad::new([start_x, end_x, start_y, end_y], fg_color, bg_color, shader_program, ' ');
                 quads.push(quad);
             }
         }
@@ -66,6 +61,37 @@ impl Grid {
             let quad = &mut self.quads[(start_position + text_index) as usize];
             quad.switch_char(text_vec[text_index as usize]);
         }
+    }
+
+    pub fn write_box(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32) {
+        let quads = self.quads.as_mut_slice();
+        for x in x_start..(x_end + 1) {
+            for y in y_start..(y_end + 1) {
+                let index = (y * self.width + x) as usize;
+                if (x != x_start && x != x_end && y != y_start && y != y_end) || x > self.width || y > self.height {
+                    continue;
+                }
+                if x == x_start && y == y_start {
+                    quads[index].switch_char('╚');
+                }
+                else if x == x_end && y == y_end {
+                    quads[index].switch_char('╗');
+                }
+                else if x == x_start && y == y_end {
+                    quads[index].switch_char('╔');
+                }
+                else if x == x_end && y == y_start {
+                    quads[index].switch_char('╝');
+                }
+                else if x == x_start || x == x_end {
+                    quads[index].switch_char('║');
+                }
+                else if y == y_start || y == y_end {
+                    quads[index].switch_char('═');
+                }
+            }
+        }
+        //Draw corner
     }
 
     pub fn shuffle_glyph(&mut self) {

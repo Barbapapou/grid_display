@@ -107,6 +107,7 @@ fn main() -> Result<(), ()> {
 
         grid.shuffle_glyph();
         grid.write_at(1, 1, &time_last_frame);
+        grid.write_box(0, 0, time_last_frame.len() as i32 + 1, 2);
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
