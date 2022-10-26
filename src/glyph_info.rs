@@ -9,7 +9,7 @@ const IMG_HEIGHT: i32 = 32;
 const SCALE_GLYPH: Scale = Scale { x: 32.0, y: 32.0 };
 
 pub static mut GLYPH_CACHE: Option<HashMap<char, GlyphInfo>> = None;
-pub static mut FONT: Option<Font> = None;
+pub static mut UNIFONT: Option<Font> = None;
 
 #[derive(Clone, Copy)]
 pub struct GlyphInfo {
@@ -30,15 +30,18 @@ impl GlyphInfo {
     }
 
     pub fn generate_new_entry(char: char) -> GlyphInfo {
-        let glyph = unsafe { FONT.as_ref().unwrap().glyph(char).scaled(SCALE_GLYPH).positioned(Point{x:0.0, y:0.0}) };
+        let glyph = unsafe { UNIFONT.as_ref().unwrap().glyph(char).scaled(SCALE_GLYPH).positioned(Point{x:0.0, y:0.0}) };
         let mut img = DynamicImage::new_rgba8(IMG_WIDTH as u32, IMG_HEIGHT as u32);
         let bounding_box = glyph.pixel_bounding_box().unwrap_or(Rect{ min: Point { x: 0, y: 0 },  max: Point { x: 0, y: 0 }});
         let glyph_width = bounding_box.width();
         let glyph_height = bounding_box.height();
-        // println!("char:{char}, width:{glyph_width}, height:{glyph_height}");
-        let glyph_offset_x = (IMG_WIDTH - glyph_width) / 2;
-        let glyph_offset_y = (IMG_HEIGHT - glyph_height) / 2;
-
+        let mut glyph_offset_x = (IMG_WIDTH - glyph_width) / 2;
+        let mut glyph_offset_y = (IMG_HEIGHT - glyph_height) / 2;
+        let codepoint = char as u32;
+        if (0x2500..=0x257F).contains(&codepoint) {
+            glyph_offset_x = 0;
+            glyph_offset_y = 0;
+        }
         glyph.draw(|x, y, v| {
             let x_c = x + glyph_offset_x as u32;
             let y_c = (IMG_HEIGHT - 1) as u32 - (y + glyph_offset_y as u32);

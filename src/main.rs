@@ -13,7 +13,7 @@ use std::ptr;
 use std::time::Instant;
 use quad::Quad;
 use rusttype::{Font};
-use crate::glyph_info::{FONT, GLYPH_CACHE};
+use crate::glyph_info::{UNIFONT, GLYPH_CACHE};
 use crate::grid::{Grid};
 
 const WIDTH:u32 = 1280;
@@ -43,12 +43,12 @@ void main() {
     else FragColor = uBgColor;
 }\0";
 
-const FONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
+const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
 
 fn main() -> Result<(), ()> {
     unsafe{
         GLYPH_CACHE = Some(HashMap::new());
-        FONT = Font::try_from_bytes(FONT_DATA);
+        UNIFONT = Font::try_from_bytes(UNIFONT_DATA);
     };
 
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
@@ -93,8 +93,8 @@ fn main() -> Result<(), ()> {
     }
 
 
-    let width = 16 * 5;
-    let height = 9 * 5;
+    let width = 16;
+    let height = 9;
 
     let mut grid = Grid::new(width, height, shader_program);
     let mut time_last_frame = String::new();
@@ -105,7 +105,7 @@ fn main() -> Result<(), ()> {
             handle_window_event(&mut window, event);
         }
 
-        grid.shuffle_glyph();
+        // grid.shuffle_glyph();
         grid.write_at(1, 1, &time_last_frame);
         grid.write_box(0, 0, time_last_frame.len() as i32 + 1, 2);
 
