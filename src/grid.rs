@@ -10,6 +10,7 @@ pub struct Grid {
 impl Grid {
     pub fn new(width: i32, height: i32, shader_program: u32) -> Grid
     {
+        let width = width * 2;
         let mut quads = Vec::with_capacity((width * height) as usize);
         let mut rng = rand::thread_rng();
         let width_f = width as f32;
@@ -22,7 +23,8 @@ impl Grid {
                 let start_y = ((y as f32)       / height_f) * 2.0 - 1.0;
                 let end_y =   ((y as f32 + 1.0) / height_f) * 2.0 - 1.0;
                 let fg_color = [1.0, 1.0, 1.0, 1.0];
-                let bg_color = [0.0, 0.0, 0.0, 1.0];
+                // let bg_color = [0.0, 0.0, 0.0, 1.0];
+                let bg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
                 let quad = Quad::new([start_x, end_x, start_y, end_y], fg_color, bg_color, shader_program, ' ');
                 quads.push(quad);
             }
@@ -65,8 +67,8 @@ impl Grid {
 
     pub fn write_box(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32) {
         let quads = self.quads.as_mut_slice();
-        for x in x_start..(x_end + 1) {
-            for y in y_start..(y_end + 1) {
+        for x in x_start..=x_end {
+            for y in y_start..=y_end {
                 let index = (y * self.width + x) as usize;
                 if (x != x_start && x != x_end && y != y_start && y != y_end) || x > self.width || y > self.height {
                     continue;
@@ -99,8 +101,10 @@ impl Grid {
         for quad in self.quads.as_mut_slice() {
             let char = char::from_u32((rng.gen::<f32>() * 65_536.0) as u32).unwrap_or('�');
             let fg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
+            let bg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
             quad.switch_char(char);
             quad.switch_fg_color(fg_color);
+            quad.switch_bg_color(bg_color);
         }
     }
 }

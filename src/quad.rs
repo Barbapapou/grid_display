@@ -88,4 +88,8 @@ impl Quad {
     pub fn switch_fg_color(&mut self, color: [f32; 4]){
         self.fg_color = color;
     }
+
+    pub fn switch_bg_color(&mut self, color: [f32; 4]){
+        self.bg_color = color;
+    }
 }

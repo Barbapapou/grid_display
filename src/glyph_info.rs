@@ -4,7 +4,7 @@ use std::os::raw::c_void;
 use image::{DynamicImage, GenericImage, Rgba};
 use rusttype::{Font, Point, Rect, Scale};
 
-const IMG_WIDTH: i32 = 32;
+const IMG_WIDTH: i32 = 16;
 const IMG_HEIGHT: i32 = 32;
 const SCALE_GLYPH: Scale = Scale { x: 32.0, y: 32.0 };
 
@@ -30,26 +30,24 @@ impl GlyphInfo {
     }
 
     pub fn generate_new_entry(char: char) -> GlyphInfo {
-        let glyph = unsafe { UNIFONT.as_ref().unwrap().glyph(char).scaled(SCALE_GLYPH).positioned(Point{x:0.0, y:0.0}) };
-        let mut img = DynamicImage::new_rgba8(IMG_WIDTH as u32, IMG_HEIGHT as u32);
+        let font = unsafe {UNIFONT.as_ref().unwrap()};
+        // TODO place glyph by their v_metric and h_metric
+        let v_metric = font.v_metrics(SCALE_GLYPH);
+        let h_metric = font.glyph(char).scaled(SCALE_GLYPH).h_metrics();
+        let glyph = font.glyph(char).scaled(SCALE_GLYPH).positioned(Point{x:0.0, y:0.0});
         let bounding_box = glyph.pixel_bounding_box().unwrap_or(Rect{ min: Point { x: 0, y: 0 },  max: Point { x: 0, y: 0 }});
         let glyph_width = bounding_box.width();
         let glyph_height = bounding_box.height();
-        let mut glyph_offset_x = (IMG_WIDTH - glyph_width) / 2;
-        let mut glyph_offset_y = (IMG_HEIGHT - glyph_height) / 2;
-        let codepoint = char as u32;
-        if (0x2500..=0x257F).contains(&codepoint) {
-            glyph_offset_x = 0;
-            glyph_offset_y = 0;
-        }
+        let glyph_offset_x = ((IMG_WIDTH - glyph_width) / 2).max(0);
+        let glyph_offset_y = ((IMG_HEIGHT - glyph_height) / 2).max(0);
+        let mut img = DynamicImage::new_rgba8(IMG_WIDTH as u32, IMG_HEIGHT as u32);
+        println!("{char}, width: {glyph_width}, height: {glyph_height}");
         glyph.draw(|x, y, v| {
+            if x > IMG_WIDTH as u32 - 1 || y > IMG_HEIGHT as u32 - 1 { return }
             let x_c = x + glyph_offset_x as u32;
             let y_c = (IMG_HEIGHT - 1) as u32 - (y + glyph_offset_y as u32);
-            let color = if v > 0.0 {
-                Rgba([255, 255, 255, 255])
-            } else {
-                Rgba([0, 0, 0, 255])
-            };
+            let color = if v > 0.0 { Rgba([255, 255, 255, 255]) }
+            else { Rgba([0, 0, 0, 255]) };
             img.put_pixel(
                 x_c,
                 y_c,
