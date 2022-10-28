@@ -35,10 +35,6 @@ impl Grid {
         }
     }
 
-    pub fn get_quad_at(&self, x: i32, y: i32) -> &Quad {
-        &self.quads[(y * self.width + x) as usize]
-    }
-
     pub unsafe fn draw(&self) {
         for quad in self.quads.as_slice() {
             quad.draw();
@@ -52,6 +48,8 @@ impl Grid {
     pub fn clear_grid(&mut self) {
         for quad in self.quads.as_mut_slice() {
             quad.switch_char(' ');
+            quad.switch_fg_color([1.0, 1.0, 1.0, 1.0]);
+            quad.switch_bg_color([0.0, 0.0, 0.0, 1.0]);
         }
     }
 
