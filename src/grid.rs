@@ -98,6 +98,15 @@ impl Grid {
         }
     }
 
+    pub fn inverse_color_at(&mut self, x: i32, y: i32) {
+        let quad = &mut self.quads.as_mut_slice()[(x + y * self.width) as usize];
+        std::mem::swap(&mut quad.fg_color, &mut quad.bg_color);
+    }
+
+    pub fn switch_bg_at(&mut self, x: i32, y: i32, color: [f32;4]) {
+        self.quads.as_mut_slice()[(x + y * self.width) as usize].switch_bg_color(color);
+    }
+
     pub fn shuffle_glyph(&mut self) {
         let mut rng = rand::thread_rng();
         for quad in self.quads.as_mut_slice() {

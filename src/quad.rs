@@ -9,8 +9,8 @@ pub struct Quad {
     program: GLuint,
     u_fg_color_location: GLint,
     u_bg_color_location: GLint,
-    fg_color: [f32; 4],
-    bg_color: [f32; 4],
+    pub fg_color: [f32; 4],
+    pub bg_color: [f32; 4],
     texture: GLuint,
 }
 
