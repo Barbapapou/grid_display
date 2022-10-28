@@ -8,6 +8,7 @@ pub enum BoxDrawing {
     QuadrupleDashLight,
     QuadrupleDashHeavy,
     Double,
+    Arc,
 }
 
 impl BoxDrawing {
@@ -22,6 +23,7 @@ impl BoxDrawing {
             BoxDrawing::QuadrupleDashLight =>   {('┈', '┊', '└', '┌', '┘', '┐')},
             BoxDrawing::QuadrupleDashHeavy =>   {('┉', '┋', '┗', '┏', '┛', '┓')},
             BoxDrawing::Double =>               {('═', '║', '╚', '╔', '╝', '╗')},
+            BoxDrawing::Arc =>                  {('─', '│', '╰', '╭', '╯', '╮')},
         }
     }
 }
