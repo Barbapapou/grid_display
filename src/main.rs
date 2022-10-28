@@ -1,6 +1,7 @@
 mod quad;
 mod glyph_info;
 mod grid;
+mod box_drawing;
 
 extern crate gl;
 extern crate glfw;
@@ -71,7 +72,6 @@ fn main() -> Result<(), ()> {
     unsafe {
         gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
 
-        //Shader
         vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
         gl::ShaderSource(vertex_shader, 1, [VERTEX_SHADER_SOURCE.as_ptr() as *const GLchar].as_ptr(), ptr::null());
         gl::CompileShader(vertex_shader);
@@ -91,9 +91,9 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-
-    let width = 16;
-    let height = 9;
+    let mul = 1;
+    let width = 16 * 2 * mul;
+    let height = 9 * mul;
 
     let mut grid = Grid::new(width, height, shader_program);
     let mut time_last_frame = String::new();
@@ -108,6 +108,7 @@ fn main() -> Result<(), ()> {
         grid.clear_grid();
         grid.write_at(1, 1, &time_last_frame);
         grid.write_box(0, 0, time_last_frame.len() as i32 + 1, 2);
+        grid.write_at(5, 5, "Hello world!");
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
