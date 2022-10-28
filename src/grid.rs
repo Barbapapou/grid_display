@@ -51,6 +51,12 @@ impl Grid {
     Modification
      */
 
+    pub fn clear_grid(&mut self) {
+        for quad in self.quads.as_mut_slice() {
+            quad.switch_char(' ');
+        }
+    }
+
     pub fn write_at(&mut self, x: i32, y: i32, text: &str) {
         let text_vec: Vec<char> = text.chars().collect();
         let mut text_len = text_vec.len() as i32;

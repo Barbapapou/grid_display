@@ -8,7 +8,7 @@ extern crate core;
 
 use std::collections::HashMap;
 use gl::types::*;
-use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, Window, WindowHint};
+use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, SwapInterval, Window, WindowHint};
 use std::ptr;
 use std::time::Instant;
 use quad::Quad;
@@ -37,10 +37,8 @@ uniform sampler2D uSampler;
 uniform vec4 uFgColor;
 uniform vec4 uBgColor;
 void main() {
-    // FragColor = uColor;
     vec4 textureSample = texture(uSampler, iUv);
-    if (textureSample.r > 0.0f) FragColor = uFgColor * textureSample;
-    else FragColor = uBgColor;
+    FragColor = (textureSample.r > 0.0f) ? uFgColor * textureSample : uBgColor;
 }\0";
 
 const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
@@ -64,6 +62,7 @@ fn main() -> Result<(), ()> {
     window.set_framebuffer_size_polling(true);
 
     load_gl_functions(&mut window);
+    glfw.set_swap_interval(SwapInterval::None);
 
     let vertex_shader: GLuint;
     let fragment_shader: GLuint;
@@ -106,6 +105,7 @@ fn main() -> Result<(), ()> {
         }
 
         // grid.shuffle_glyph();
+        grid.clear_grid();
         grid.write_at(1, 1, &time_last_frame);
         grid.write_box(0, 0, time_last_frame.len() as i32 + 1, 2);
 

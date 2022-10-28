@@ -31,17 +31,16 @@ impl GlyphInfo {
 
     pub fn generate_new_entry(char: char) -> GlyphInfo {
         let font = unsafe {UNIFONT.as_ref().unwrap()};
-        // TODO place glyph by their v_metric and h_metric
-        let v_metric = font.v_metrics(SCALE_GLYPH);
-        let h_metric = font.glyph(char).scaled(SCALE_GLYPH).h_metrics();
-        let glyph = font.glyph(char).scaled(SCALE_GLYPH).positioned(Point{x:0.0, y:0.0});
-        let bounding_box = glyph.pixel_bounding_box().unwrap_or(Rect{ min: Point { x: 0, y: 0 },  max: Point { x: 0, y: 0 }});
+        let v_metrics = font.v_metrics(SCALE_GLYPH);
+        let position = Point {x: 0.0, y: v_metrics.ascent};
+        let glyph = font.glyph(char).scaled(SCALE_GLYPH).positioned(position);
+        let bounding_box = glyph.pixel_bounding_box().unwrap_or(Rect{min: Point{x:0, y:0}, max: Point{x:0, y:0}});
         let glyph_width = bounding_box.width();
         let glyph_height = bounding_box.height();
-        let glyph_offset_x = ((IMG_WIDTH - glyph_width) / 2).max(0);
-        let glyph_offset_y = ((IMG_HEIGHT - glyph_height) / 2).max(0);
+        let glyph_offset_x = bounding_box.min.x;
+        let glyph_offset_y = bounding_box.min.y;
+        println!("{char}, min_x: {glyph_offset_x}, min_y: {glyph_offset_y}, width: {glyph_width}, height: {glyph_height}");
         let mut img = DynamicImage::new_rgba8(IMG_WIDTH as u32, IMG_HEIGHT as u32);
-        println!("{char}, width: {glyph_width}, height: {glyph_height}");
         glyph.draw(|x, y, v| {
             if x > IMG_WIDTH as u32 - 1 || y > IMG_HEIGHT as u32 - 1 { return }
             let x_c = x + glyph_offset_x as u32;
