@@ -17,9 +17,21 @@ use rusttype::{Font};
 use crate::glyph_info::{UNIFONT, GLYPH_CACHE};
 use crate::grid::{Grid};
 
-static mut WIDTH:u32 = 1280;
-static mut HEIGHT:u32 = 720;
-const ASPECT_RATIO:f32 = 16.0/9.0;
+struct Application {
+    aspect_ratio: f32,
+    width: u32,
+    height: u32,
+    window_width: u32,
+    window_height: u32,
+}
+
+static mut APPLICATION: Application = Application{
+    aspect_ratio: 16.0/9.0,
+    width: 1280,
+    height: 720,
+    window_width: 1280,
+    window_height: 720,
+};
 
 const VERTEX_SHADER_SOURCE: &[u8] = b"
 #version 330 core
@@ -51,12 +63,14 @@ fn main() -> Result<(), ()> {
         UNIFONT = Font::try_from_bytes(UNIFONT_DATA);
     };
 
+    let app = unsafe {&APPLICATION};
+
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
     Glfw::window_hint(&mut glfw, WindowHint::ContextVersion(3, 3));
     Glfw::window_hint(&mut glfw, WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
 
     let (mut window, events) = glfw
-        .create_window(unsafe {WIDTH}, unsafe {HEIGHT}, "Hello this is window", glfw::WindowMode::Windowed)
+        .create_window(app.width, app.height, "Hello this is window", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window.");
 
     window.set_key_polling(true);
@@ -71,7 +85,7 @@ fn main() -> Result<(), ()> {
     let shader_program: GLuint;
 
     unsafe {
-        gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
+        gl::Viewport(0, 0, app.width as i32, app.height as i32);
 
         vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
         gl::ShaderSource(vertex_shader, 1, [VERTEX_SHADER_SOURCE.as_ptr() as *const GLchar].as_ptr(), ptr::null());
@@ -110,14 +124,17 @@ fn main() -> Result<(), ()> {
         grid.write_at(1, 1, &time_last_frame);
         grid.write_box(0, 0, time_last_frame.len() as i32 + 1, 2);
         grid.write_at(5, 5, "Hello world!");
+        let window_offset_x = (app.window_width - app.width)/2;
+        let window_offset_y = (app.window_height - app.height)/2;
         let (mouse_pos_x, mouse_pos_y) = window.get_cursor_pos();
-        let mouse_pos_y = unsafe {HEIGHT as f64 - mouse_pos_y};
-        let mouse_pos_str = format!("{mouse_pos_x}, {mouse_pos_y}");
-        grid.write_at(5,6, &mouse_pos_str);
-        let grid_pos_x = unsafe {(mouse_pos_x / WIDTH as f64 * grid_width as f64).floor() as i32};
-        let grid_pos_y = unsafe {(mouse_pos_y / HEIGHT as f64 * grid_height as f64).floor() as i32};
-        let mouse_pos_str = format!("{grid_pos_x}, {grid_pos_y}");
-        grid.write_at(5,7, &mouse_pos_str);
+        let mouse_pos_x = mouse_pos_x - window_offset_x as f64;
+        let mouse_pos_y = (app.height as f64 + window_offset_y as f64)- mouse_pos_y;
+        let mouse_pos_str = format!("Mouse coordinate: {mouse_pos_x}, {mouse_pos_y}");
+        grid.write_at(0,3, &mouse_pos_str);
+        let grid_pos_x = (mouse_pos_x / app.width as f64 * grid_width as f64).floor() as i32;
+        let grid_pos_y = (mouse_pos_y / app.height as f64 * grid_height as f64).floor() as i32;
+        let mouse_pos_str = format!("Grid coordinate: {grid_pos_x}, {grid_pos_y}");
+        grid.write_at(0,4, &mouse_pos_str);
         if grid_pos_x >= 0 && grid_pos_x < grid_width && grid_pos_y >= 0 && grid_pos_y < grid_height {
             grid.inverse_color_at(grid_pos_x as i32, grid_pos_y as i32);
         }
@@ -146,23 +163,24 @@ fn handle_window_event(window: &mut Window, event: glfw::WindowEvent) {
 }
 
 fn framebuffer_resize_event(width: f32, height:f32) {
+    let mut app = unsafe {&mut APPLICATION};
+    app.window_width = width as u32;
+    app.window_height = height as u32;
     let mut width_c = width;
     let mut height_c = height;
     if width < height {
-        height_c = 1.0/ASPECT_RATIO * width_c;
+        height_c = 1.0/app.aspect_ratio * width_c;
     } else {
-        width_c = ASPECT_RATIO * height_c;
+        width_c = app.aspect_ratio * height_c;
         if width_c > width {
             width_c = width;
-            height_c = 1.0/ASPECT_RATIO * width_c;
+            height_c = 1.0/app.aspect_ratio * width_c;
         }
     }
     let offset_w = (width - width_c) / 2.0;
     let offset_h = (height - height_c) / 2.0;
-    unsafe {
-        WIDTH = width_c as u32;
-        HEIGHT = height_c as u32;
-    }
+    app.width = width_c as u32;
+    app.height = height_c as u32;
     unsafe { gl::Viewport(offset_w as i32, offset_h as i32, width_c as i32, height_c as i32); }
 }
 
