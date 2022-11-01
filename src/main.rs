@@ -106,7 +106,7 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-    let mul = 1;
+    let mul = 5;
     let grid_width = 16 * 2 * mul;
     let grid_height = 9 * mul;
 
@@ -120,7 +120,7 @@ fn main() -> Result<(), ()> {
         }
 
         // grid.shuffle_glyph();
-        grid.clear_grid();
+        grid.clear();
         grid.write_at(1, 1, &time_last_frame);
         grid.write_box(0, 0, time_last_frame.len() as i32 + 1, 2);
         grid.write_at(5, 5, "Hello world!");

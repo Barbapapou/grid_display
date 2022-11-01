@@ -4,9 +4,9 @@ use std::os::raw::c_void;
 use image::{DynamicImage, GenericImage, Rgba};
 use rusttype::{Font, Point, Rect, Scale};
 
-const IMG_WIDTH: i32 = 16;
-const IMG_HEIGHT: i32 = 32;
-const SCALE_GLYPH: Scale = Scale { x: 32.0, y: 32.0 };
+const IMG_WIDTH: i32 = 8;
+const IMG_HEIGHT: i32 = 16;
+const SCALE_GLYPH: Scale = Scale { x: 16.0, y: 16.0 };
 
 pub static mut GLYPH_CACHE: Option<HashMap<char, GlyphInfo>> = None;
 pub static mut UNIFONT: Option<Font> = None;
@@ -59,10 +59,10 @@ impl GlyphInfo {
             gl::GenTextures(1, &mut texture);
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, texture);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST_MIPMAP_LINEAR as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
             gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, IMG_WIDTH, IMG_HEIGHT, 0, gl::RGBA, gl::UNSIGNED_BYTE, img.as_bytes().as_ptr() as *const c_void);
             gl::GenerateMipmap(gl::TEXTURE_2D);
         }

@@ -45,10 +45,28 @@ impl Grid {
     Modification
      */
 
-    pub fn clear_grid(&mut self) {
+    pub fn clear(&mut self) {
         for quad in self.quads.as_mut_slice() {
             quad.switch_char(' ');
             quad.switch_fg_color([1.0, 1.0, 1.0, 1.0]);
+            quad.switch_bg_color([0.0, 0.0, 0.0, 1.0]);
+        }
+    }
+
+    pub fn clear_char(&mut self) {
+        for quad in self.quads.as_mut_slice() {
+            quad.switch_char(' ');
+        }
+    }
+
+    pub fn clear_fg_color(&mut self) {
+        for quad in self.quads.as_mut_slice() {
+            quad.switch_fg_color([1.0, 1.0, 1.0, 1.0]);
+        }
+    }
+
+    pub fn clear_bg_color(&mut self) {
+        for quad in self.quads.as_mut_slice() {
             quad.switch_bg_color([0.0, 0.0, 0.0, 1.0]);
         }
     }
