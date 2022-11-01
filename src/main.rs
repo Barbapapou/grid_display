@@ -52,7 +52,7 @@ uniform vec4 uFgColor;
 uniform vec4 uBgColor;
 void main() {
     vec4 textureSample = texture(uSampler, iUv);
-    FragColor = (textureSample.r > 0.0f) ? uFgColor * textureSample : uBgColor;
+    FragColor = mix(uBgColor, uFgColor, textureSample.r);
 }\0";
 
 const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
@@ -76,6 +76,7 @@ fn main() -> Result<(), ()> {
     window.set_key_polling(true);
     window.make_current();
     window.set_framebuffer_size_polling(true);
+    window.set_size_limits(Some(1280), Some(720), None, None);
 
     load_gl_functions(&mut window);
     glfw.set_swap_interval(SwapInterval::None);
@@ -112,6 +113,7 @@ fn main() -> Result<(), ()> {
 
     let mut grid = Grid::new(grid_width, grid_height, shader_program);
     let mut time_last_frame = String::new();
+    // grid.shuffle_glyph();
 
     while !window.should_close() {
         let now = Instant::now();
@@ -119,7 +121,6 @@ fn main() -> Result<(), ()> {
             handle_window_event(&mut window, event);
         }
 
-        // grid.shuffle_glyph();
         grid.clear();
         grid.write_at(1, 1, &time_last_frame);
         grid.write_box(0, 0, time_last_frame.len() as i32 + 1, 2);

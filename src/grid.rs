@@ -128,7 +128,7 @@ impl Grid {
     pub fn shuffle_glyph(&mut self) {
         let mut rng = rand::thread_rng();
         for quad in self.quads.as_mut_slice() {
-            let char = char::from_u32((rng.gen::<f32>() * 65_536.0) as u32).unwrap_or('�');
+            let char = char::from_u32((rng.gen::<f32>() * 128.0) as u32).unwrap_or('�');
             let fg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
             let bg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
             quad.switch_char(char);
