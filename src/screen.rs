@@ -1,4 +1,5 @@
 use crate::{Application, Grid};
+use crate::box_drawing::BoxDrawing;
 use crate::ui_element::UiElement;
 use crate::ui_text::UiText;
 
@@ -38,7 +39,7 @@ impl Screen {
 
         let delta_time_str = format!("{delta_time} ms");
         self.grid.write_at(1, 1, &delta_time_str);
-        self.grid.write_box(0, 0, delta_time_str.len() as i32 + 1, 2);
+        self.grid.write_box(0, 0, delta_time_str.len() as i32 + 1, 2, BoxDrawing::Double);
         self.grid.write_at(5, 5, "Hello world!");
         let mouse_pos_x = cursor_position.0;
         let mouse_pos_y = cursor_position.1;

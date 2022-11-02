@@ -84,10 +84,10 @@ impl Grid {
             quad.switch_char(text_vec[text_index as usize]);
         }
     }
-// todo add box style option
-    pub fn write_box(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32) {
+
+    pub fn write_box(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32, box_style: BoxDrawing) {
         let quads = self.quads.as_mut_slice();
-        let (h_line, v_line, l_l_corner, u_l_corner, l_r_corner, u_r_corner) = BoxDrawing::get_char(BoxDrawing::Arc);
+        let (h_line, v_line, l_l_corner, u_l_corner, l_r_corner, u_r_corner) = BoxDrawing::get_char(box_style);
         for x in x_start..=x_end {
             for y in y_start..=y_end {
                 let index = (y * self.width + x) as usize;
