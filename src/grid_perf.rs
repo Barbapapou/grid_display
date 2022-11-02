@@ -1,11 +1,15 @@
 use std::ffi::c_void;
 use std::mem::size_of;
 use std::ptr;
+use rand::{Rng};
+use rusttype::gpu_cache::Cache;
 
 pub struct GridPerf {
     vao: u32,
     program: u32,
     nb_triangle: i32,
+    vertices: Vec<f32>,
+    vbo: u32,
 }
 
 impl GridPerf {
@@ -57,7 +61,7 @@ impl GridPerf {
 
             gl::GenBuffers(1, &mut vbo);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-            gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * size_of::<f32>()) as isize, vertices.as_ptr() as *const c_void, gl::STATIC_DRAW);
+            gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * size_of::<f32>()) as isize, vertices.as_ptr() as *const c_void, gl::DYNAMIC_DRAW);
 
             gl::GenBuffers(1, &mut ebo);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
@@ -72,14 +76,32 @@ impl GridPerf {
             gl::EnableVertexAttribArray(1);
         }
 
+        let mut cache = Cache::builder().dimensions(1024, 1024).build();
+
         GridPerf {
             vao,
             program,
-            nb_triangle: (width * height * 6) as i32
+            nb_triangle: i_b_count as i32,
+            vertices,
+            vbo,
         }
     }
 
-    pub unsafe fn draw(&self) {
+    pub unsafe fn draw(&mut self) {
+        let mut rng = rand::thread_rng();
+        gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+        let mut accumulator = 0;
+        for i in self.vertices.as_mut_slice() {
+            *i = 0.0;
+        }
+        gl::BufferData(gl::ARRAY_BUFFER, (self.vertices.len() * size_of::<f32>()) as isize, self.vertices.as_ptr() as *const c_void, gl::DYNAMIC_DRAW);
+        // for i in 0..16*2*5*9*5 {
+        //     let index = i*20*4;
+        //     gl::BufferSubData(gl::ARRAY_BUFFER, index + 3*4, 8, [rng.gen::<f32>(), rng.gen::<f32>()].as_ptr() as *const c_void);
+        //     gl::BufferSubData(gl::ARRAY_BUFFER, index + 8*4, 8, [rng.gen::<f32>(), rng.gen::<f32>()].as_ptr() as *const c_void);
+        //     gl::BufferSubData(gl::ARRAY_BUFFER, index + 13*4, 8, [rng.gen::<f32>(), rng.gen::<f32>()].as_ptr() as *const c_void);
+        //     gl::BufferSubData(gl::ARRAY_BUFFER, index + 18*4, 8, [rng.gen::<f32>(), rng.gen::<f32>()].as_ptr() as *const c_void);
+        // }
         gl::BindVertexArray(self.vao);
         gl::UseProgram(self.program);
         gl::DrawElements(gl::TRIANGLES, self.nb_triangle, gl::UNSIGNED_INT, ptr::null());

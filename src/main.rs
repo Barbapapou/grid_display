@@ -58,7 +58,8 @@ uniform vec4 uFgColor;
 uniform vec4 uBgColor;
 void main() {
     vec4 textureSample = texture(uSampler, iUv);
-    FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
+    FragColor = textureSample;
+    // FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
     // FragColor = mix(uBgColor, uFgColor, textureSample.x);
 }\0";
 
@@ -114,7 +115,7 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-    let grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
+    let mut grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
 
     let mut screen = Screen::new(shader_program);
     let mut delta_time = 0;
@@ -214,6 +215,7 @@ fn load_gl_functions(window: &mut Window) {
     gl::BindTexture::load_with(|_s| window.get_proc_address("glBindTexture"));
     gl::BindVertexArray::load_with(|_s| window.get_proc_address("glBindVertexArray"));
     gl::BufferData::load_with(|_s| window.get_proc_address("glBufferData"));
+    gl::BufferSubData::load_with(|_s| window.get_proc_address("glBufferSubData"));
     gl::Clear::load_with(|_s| window.get_proc_address("glClear"));
     gl::ClearColor::load_with(|_s| window.get_proc_address("glClearColor"));
     gl::CompileShader::load_with(|_s| window.get_proc_address("glCompileShader"));
