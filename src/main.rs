@@ -5,6 +5,7 @@ mod box_drawing;
 mod ui_element;
 mod ui_text;
 mod screen;
+mod grid_perf;
 
 extern crate gl;
 extern crate glfw;
@@ -19,6 +20,7 @@ use quad::Quad;
 use rusttype::Font;
 use crate::glyph_info::{GLYPH_CACHE, UNIFONT};
 use crate::grid::Grid;
+use crate::grid_perf::GridPerf;
 use crate::screen::Screen;
 
 struct Application {
@@ -56,7 +58,8 @@ uniform vec4 uFgColor;
 uniform vec4 uBgColor;
 void main() {
     vec4 textureSample = texture(uSampler, iUv);
-    FragColor = mix(uBgColor, uFgColor, textureSample.x);
+    FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
+    // FragColor = mix(uBgColor, uFgColor, textureSample.x);
 }\0";
 
 const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
@@ -111,6 +114,8 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
+    let grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
+
     let mut screen = Screen::new(shader_program);
     let mut delta_time = 0;
     while !window.should_close() {
@@ -123,12 +128,14 @@ fn main() -> Result<(), ()> {
         screen.update(delta_time, app, cursor_position);
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            screen.grid.draw();
+            grid_perf.draw();
+            // screen.grid.draw();
         }
 
         window.swap_buffers();
         glfw.poll_events();
         delta_time = start_frame_time.elapsed().as_millis();
+        println!("{delta_time}");
     }
 
     Ok(())
