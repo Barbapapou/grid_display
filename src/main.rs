@@ -2,6 +2,9 @@ mod quad;
 mod glyph_info;
 mod grid;
 mod box_drawing;
+mod ui_element;
+mod ui_text;
+mod screen;
 
 extern crate gl;
 extern crate glfw;
@@ -13,9 +16,10 @@ use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, SwapInterval, Window, 
 use std::ptr;
 use std::time::Instant;
 use quad::Quad;
-use rusttype::{Font};
-use crate::glyph_info::{UNIFONT, GLYPH_CACHE};
-use crate::grid::{Grid};
+use rusttype::Font;
+use crate::glyph_info::{GLYPH_CACHE, UNIFONT};
+use crate::grid::Grid;
+use crate::screen::Screen;
 
 struct Application {
     aspect_ratio: f32,
@@ -52,7 +56,7 @@ uniform vec4 uFgColor;
 uniform vec4 uBgColor;
 void main() {
     vec4 textureSample = texture(uSampler, iUv);
-    FragColor = mix(uBgColor, uFgColor, textureSample.r);
+    FragColor = mix(uBgColor, uFgColor, textureSample.x);
 }\0";
 
 const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
@@ -70,13 +74,13 @@ fn main() -> Result<(), ()> {
     Glfw::window_hint(&mut glfw, WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
 
     let (mut window, events) = glfw
-        .create_window(app.width, app.height, "Hello this is window", glfw::WindowMode::Windowed)
+        .create_window(app.width, app.height, "CONSOLE_GRID", glfw::WindowMode::Windowed)
         .expect("Failed to create GLFW window.");
 
     window.set_key_polling(true);
     window.make_current();
     window.set_framebuffer_size_polling(true);
-    window.set_size_limits(Some(1280), Some(720), None, None);
+    // window.set_size_limits(Some(1280), Some(720), None, None);
 
     load_gl_functions(&mut window);
     glfw.set_swap_interval(SwapInterval::None);
@@ -107,49 +111,24 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-    let mul = 5;
-    let grid_width = 16 * 2 * mul;
-    let grid_height = 9 * mul;
-
-    let mut grid = Grid::new(grid_width, grid_height, shader_program);
-    let mut time_last_frame = String::new();
-    // grid.shuffle_glyph();
-
+    let mut screen = Screen::new(shader_program);
+    let mut delta_time = 0;
     while !window.should_close() {
-        let now = Instant::now();
+        let start_frame_time = Instant::now();
+        let cursor_position = get_mouse_position(app, &window);
         for (_, event) in glfw::flush_messages(&events) {
             handle_window_event(&mut window, event);
         }
 
-        grid.clear();
-        grid.write_at(1, 1, &time_last_frame);
-        grid.write_box(0, 0, time_last_frame.len() as i32 + 1, 2);
-        grid.write_at(5, 5, "Hello world!");
-        let window_offset_x = (app.window_width - app.width)/2;
-        let window_offset_y = (app.window_height - app.height)/2;
-        let (mouse_pos_x, mouse_pos_y) = window.get_cursor_pos();
-        let mouse_pos_x = mouse_pos_x - window_offset_x as f64;
-        let mouse_pos_y = (app.height as f64 + window_offset_y as f64)- mouse_pos_y;
-        let mouse_pos_str = format!("Mouse coordinate: {mouse_pos_x}, {mouse_pos_y}");
-        grid.write_at(0,3, &mouse_pos_str);
-        let grid_pos_x = (mouse_pos_x / app.width as f64 * grid_width as f64).floor() as i32;
-        let grid_pos_y = (mouse_pos_y / app.height as f64 * grid_height as f64).floor() as i32;
-        let mouse_pos_str = format!("Grid coordinate: {grid_pos_x}, {grid_pos_y}");
-        grid.write_at(0,4, &mouse_pos_str);
-        if grid_pos_x >= 0 && grid_pos_x < grid_width && grid_pos_y >= 0 && grid_pos_y < grid_height {
-            grid.inverse_color_at(grid_pos_x as i32, grid_pos_y as i32);
-        }
-
+        screen.update(delta_time, app, cursor_position);
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            grid.draw();
+            screen.grid.draw();
         }
 
         window.swap_buffers();
         glfw.poll_events();
-
-        let time_elapsed = now.elapsed().as_millis();
-        time_last_frame = format!("{time_elapsed} ms");
+        delta_time = start_frame_time.elapsed().as_millis();
     }
 
     Ok(())
@@ -161,6 +140,15 @@ fn handle_window_event(window: &mut Window, event: glfw::WindowEvent) {
         glfw::WindowEvent::FramebufferSize(width, height) => framebuffer_resize_event(width as f32, height as f32),
         _ => {}
     }
+}
+
+fn get_mouse_position(app: &Application, window: &Window) -> (f64, f64) {
+    let window_offset_x = (app.window_width - app.width)/2;
+    let window_offset_y = (app.window_height - app.height)/2;
+    let (mouse_pos_x, mouse_pos_y) = window.get_cursor_pos();
+    let mouse_pos_x = mouse_pos_x - window_offset_x as f64;
+    let mouse_pos_y = (app.height as f64 + window_offset_y as f64) - mouse_pos_y;
+    (mouse_pos_x, mouse_pos_y)
 }
 
 fn framebuffer_resize_event(width: f32, height:f32) {
