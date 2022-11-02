@@ -17,7 +17,7 @@ impl Screen {
         let grid_height = 9 * mul;
 
         let grid = Grid::new(grid_width, grid_height, shader_program);
-        let mut ui_elements: Vec<Box<dyn UiElement>> = vec![
+        let ui_elements: Vec<Box<dyn UiElement>> = vec![
             Box::new(UiText::new(String::from("Hello world"), (15, 15))),
             Box::new(UiText::new(String::from("Hello from the whole world"), (25, 25))),
         ];
