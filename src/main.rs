@@ -41,12 +41,12 @@ static mut APPLICATION: Application = Application{
 
 const VERTEX_SHADER_SOURCE: &[u8] = b"
 #version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec2 aUv;
+attribute vec3 aVertexPosition;
+attribute vec2 aTextureCoord;
 out vec2 iUv;
 void main() {
-    gl_Position = vec4(aPos, 1.0);
-    iUv = aUv;
+    gl_Position = vec4(aVertexPosition, 1.0);
+    iUv = aTextureCoord;
 }\0";
 
 const FRAGMENT_SHADER_SOURCE: &[u8] = b"
@@ -136,7 +136,7 @@ fn main() -> Result<(), ()> {
         window.swap_buffers();
         glfw.poll_events();
         delta_time = start_frame_time.elapsed().as_millis();
-        println!("{delta_time}");
+        // println!("{delta_time}");
     }
 
     Ok(())
@@ -229,6 +229,7 @@ fn load_gl_functions(window: &mut Window) {
     gl::GenerateMipmap::load_with(|_s| window.get_proc_address("glGenerateMipmap"));
     gl::GenTextures::load_with(|_s| window.get_proc_address("glGenTextures"));
     gl::GenVertexArrays::load_with(|_s| window.get_proc_address("glGenVertexArrays"));
+    gl::GetAttribLocation::load_with(|_s| window.get_proc_address("glGetAttribLocation"));
     gl::GetBooleanv::load_with(|_s| window.get_proc_address("GetBooleanv"));
     gl::GetProgramInfoLog::load_with(|_s| window.get_proc_address("glGetProgramInfoLog"));
     gl::GetProgramiv::load_with(|_s| window.get_proc_address("glGetProgramiv"));

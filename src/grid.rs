@@ -1,4 +1,4 @@
-use image::codecs::png::CompressionType::Default;
+
 use rand::Rng;
 use crate::box_drawing::BoxDrawing;
 use crate::Quad;
