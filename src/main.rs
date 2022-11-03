@@ -6,6 +6,7 @@ mod ui_element;
 mod ui_text;
 mod screen;
 mod grid_perf;
+mod gl_error_check;
 
 extern crate gl;
 extern crate glfw;
@@ -58,7 +59,8 @@ uniform vec4 uFgColor;
 uniform vec4 uBgColor;
 void main() {
     vec4 textureSample = texture(uSampler, iUv);
-    FragColor = textureSample;
+    FragColor = vec4(0.2,0.2,0.2,0.2);
+    // FragColor = textureSample;
     // FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
     // FragColor = mix(uBgColor, uFgColor, textureSample.x);
 }\0";
@@ -115,9 +117,15 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-    let mut grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
+    // let mut grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
+    let mut grid_perf = GridPerf::new(1, 1, shader_program);
+    unsafe {
+        grid_perf.draw();
+    }
 
-    let mut screen = Screen::new(shader_program);
+    return Ok(());
+
+    // let mut screen = Screen::new(shader_program);
     let mut delta_time = 0;
     while !window.should_close() {
         let start_frame_time = Instant::now();
@@ -126,17 +134,17 @@ fn main() -> Result<(), ()> {
             handle_window_event(&mut window, event);
         }
 
-        screen.update(delta_time, app, cursor_position);
+        // screen.update(delta_time, app, cursor_position);
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            grid_perf.draw();
+            // grid_perf.draw();
             // screen.grid.draw();
         }
 
         window.swap_buffers();
         glfw.poll_events();
         delta_time = start_frame_time.elapsed().as_millis();
-        // println!("{delta_time}");
+        println!("{delta_time}");
     }
 
     Ok(())
@@ -231,6 +239,7 @@ fn load_gl_functions(window: &mut Window) {
     gl::GenVertexArrays::load_with(|_s| window.get_proc_address("glGenVertexArrays"));
     gl::GetAttribLocation::load_with(|_s| window.get_proc_address("glGetAttribLocation"));
     gl::GetBooleanv::load_with(|_s| window.get_proc_address("GetBooleanv"));
+    gl::GetError::load_with(|_s| window.get_proc_address("glGetError"));
     gl::GetProgramInfoLog::load_with(|_s| window.get_proc_address("glGetProgramInfoLog"));
     gl::GetProgramiv::load_with(|_s| window.get_proc_address("glGetProgramiv"));
     gl::GetShaderInfoLog::load_with(|_s| window.get_proc_address("glGetShaderInfoLog"));
