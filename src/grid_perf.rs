@@ -5,24 +5,26 @@ use rusttype::gpu_cache::Cache;
 use gl::types::*;
 use image::{DynamicImage, GenericImage, Rgba};
 use rusttype::{Point, Scale};
+use crate::cache_glyph::CacheGlyph;
+use crate::gl_error_check::gl_error_check;
 use crate::UNIFONT;
 
-pub struct GridPerf<'grid> {
+pub struct GridPerf {
     vao: u32,
     program: u32,
     nb_vertex: i32,
     vertex_position_buffer: u32,
     texture_coordinate_buffer: u32,
+    texture_coordinate: Vec<f32>,
     indices_buffer: u32,
     vertex_position_attrib_location: GLint,
     texture_coordinate_attrib_location: GLint,
-    texture: u32,
-    cache: Cache<'grid>,
-
+    cache_glyph: CacheGlyph,
+    char_vec: Vec<char>
 }
 
-impl<'grid> GridPerf<'grid> {
-    pub fn new(width: u32, height: u32, program: u32) -> GridPerf<'grid> {
+impl GridPerf {
+    pub fn new(width: u32, height: u32, program: u32) -> GridPerf {
         let width_f = width as f32;
         let height_f = height as f32;
 
@@ -100,56 +102,22 @@ impl<'grid> GridPerf<'grid> {
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * size_of::<f32>()) as isize, indices.as_ptr() as *const c_void, gl::STATIC_DRAW);
         }
 
-        let tex_width = 1024;
-        let tex_height = 1024;
-
-        let mut cache = Cache::builder().dimensions(tex_width, tex_height).build();
-        let mut img = DynamicImage::new_rgba8(tex_width, tex_height);
-        const SCALE_GLYPH: Scale = Scale { x: 16.0, y: 16.0 };
-        let font = unsafe {UNIFONT.as_ref().unwrap()};
-        let v_metrics = font.v_metrics(SCALE_GLYPH);
-        let position = Point {x: 0.0, y: v_metrics.ascent};
-        let glyph = font.glyph('a').scaled(SCALE_GLYPH).positioned(position);
-        cache.queue_glyph(0, glyph.clone());
-        cache.cache_queued(|rect, data| {
-            for (i, v) in data.iter().enumerate() {
-                let x = rect.min.x + (i as u32 % rect.width()) as u32;
-                let y = rect.min.y + (i as u32 / rect.width()) as u32;
-                img.put_pixel(x, y, Rgba([*v, *v, *v, *v]))
-            }
-        }).unwrap();
-
-        let mut texture = 0;
-
-        unsafe {
-            gl::GenTextures(1, &mut texture);
-            gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindTexture(gl::TEXTURE_2D, texture);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, tex_width as i32, tex_height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, img.as_bytes().as_ptr() as *const c_void);
-            gl::GenerateMipmap(gl::TEXTURE_2D);
-        }
-
+        let mut cache_glyph = CacheGlyph::new();
         // TEMP
 
-        let rect = cache.rect_for(0, &glyph).unwrap().unwrap().0;
-        let texture_coordinate_t: [f32; 8] = [
-            rect.max.x, rect.min.y,
-            rect.max.x, rect.max.y,
-            rect.min.x, rect.max.y,
-            rect.min.x, rect.min.y
-        ];
-        texture_coordinate[0..8].copy_from_slice(&texture_coordinate_t);
+        for i in 0..=256 {
+            let rect = cache_glyph.get_uv_layout(std::char::from_u32(i).unwrap());
+            let offset_tc: usize = (i * 8) as usize;
+            texture_coordinate[offset_tc]     = rect.max.x; texture_coordinate[offset_tc + 1] = rect.max.y;
+            texture_coordinate[offset_tc + 2] = rect.max.x; texture_coordinate[offset_tc + 3] = rect.min.y;
+            texture_coordinate[offset_tc + 4] = rect.min.x; texture_coordinate[offset_tc + 5] = rect.min.y;
+            texture_coordinate[offset_tc + 6] = rect.min.x; texture_coordinate[offset_tc + 7] = rect.max.y;
+        }
 
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, texture_coordinate_buffer);
-            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (8 * size_of::<f32>()) as isize, texture_coordinate.as_ptr() as *const c_void);
+            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (256*8 * size_of::<f32>()) as isize, texture_coordinate.as_ptr() as *const c_void);
         }
-
-        img.save("img.png").expect("TODO: panic message");
 
         GridPerf {
             vao,
@@ -157,18 +125,26 @@ impl<'grid> GridPerf<'grid> {
             nb_vertex: i_b_count as i32,
             vertex_position_buffer,
             texture_coordinate_buffer,
+            texture_coordinate,
             indices_buffer,
             vertex_position_attrib_location,
             texture_coordinate_attrib_location,
-            texture,
-            cache
+            cache_glyph,
+            char_vec: vec![]
         }
     }
 
     pub unsafe fn draw(&mut self) {
+
+        unsafe {
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.texture_coordinate_buffer);
+            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (self.nb_vertex as usize * size_of::<f32>()) as isize, self.texture_coordinate.as_ptr() as *const c_void);
+        }
+
+        self.cache_glyph.update_texture();
         gl::UseProgram(self.program);
         gl::BindVertexArray(self.vao);
-        gl::BindTexture(gl::TEXTURE_2D, self.texture);
+        gl::BindTexture(gl::TEXTURE_2D, self.cache_glyph.texture);
         gl::DrawElements(gl::TRIANGLES, self.nb_vertex, gl::UNSIGNED_INT, ptr::null());
     }
 }

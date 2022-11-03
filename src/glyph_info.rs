@@ -6,7 +6,7 @@ use rusttype::{Font, Point, Rect, Scale};
 
 const IMG_WIDTH: i32 = 8;
 const IMG_HEIGHT: i32 = 16;
-const SCALE_GLYPH: Scale = Scale { x: 16.0, y: 16.0 };
+pub const SCALE_GLYPH: Scale = Scale { x: 16.0, y: 16.0 };
 
 pub static mut GLYPH_CACHE: Option<HashMap<char, GlyphInfo>> = None;
 pub static mut UNIFONT: Option<Font> = None;

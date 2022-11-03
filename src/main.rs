@@ -7,6 +7,8 @@ mod ui_text;
 mod screen;
 mod grid_perf;
 mod gl_error_check;
+mod cache_glyph;
+mod util;
 
 extern crate gl;
 extern crate glfw;
@@ -116,11 +118,8 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-    // let mut grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
-    let mut grid_perf = GridPerf::new(16*2, 9, shader_program);
-    // unsafe {
-    //     grid_perf.draw();
-    // }
+    let mut grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
+    // let mut grid_perf = GridPerf::new(16*2, 9, shader_program);
 
 
     // let mut screen = Screen::new(shader_program);
