@@ -59,9 +59,8 @@ uniform vec4 uFgColor;
 uniform vec4 uBgColor;
 void main() {
     vec4 textureSample = texture(uSampler, iUv);
-    // FragColor = textureSample + vec4(0.2,0.2,0.2,0.2);
-    // FragColor = textureSample;
-    FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
+    FragColor = textureSample;
+    // FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
     // FragColor = mix(uBgColor, uFgColor, textureSample.x);
 }\0";
 
@@ -118,13 +117,13 @@ fn main() -> Result<(), ()> {
     }
 
     // let mut grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
-    let mut grid_perf = GridPerf::new(1, 1, shader_program);
+    let mut grid_perf = GridPerf::new(16*2, 9, shader_program);
     // unsafe {
     //     grid_perf.draw();
     // }
 
 
-    let mut screen = Screen::new(shader_program);
+    // let mut screen = Screen::new(shader_program);
     let mut delta_time = 0;
 
     while !window.should_close() {
