@@ -1,14 +1,9 @@
 use std::ffi::c_void;
 use std::mem::size_of;
 use std::ptr;
-use rusttype::gpu_cache::Cache;
 use gl::types::*;
-use image::{DynamicImage, GenericImage, Rgba};
 use rand::{Rng, thread_rng};
-use rusttype::{Point, Scale};
 use crate::cache_glyph::CacheGlyph;
-use crate::gl_error_check::gl_error_check;
-use crate::UNIFONT;
 
 pub struct GridPerf {
     width: u32,
