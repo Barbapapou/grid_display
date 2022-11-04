@@ -119,8 +119,6 @@ fn main() -> Result<(), ()> {
     }
 
     let mut grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
-    // let mut grid_perf = GridPerf::new(16*2, 9, shader_program);
-
 
     // let mut screen = Screen::new(shader_program);
     let mut delta_time = 0;

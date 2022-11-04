@@ -91,7 +91,7 @@ impl CacheGlyph {
         let y_o = self.nbr_glyph * 8 / self.img_width * 16;
         glyph.draw(|x, y, v| {
             let x_c = x + glyph_offset_x as u32;
-            let y_c = 15 - (y + glyph_offset_y as u32); // 15 == glyph max height
+            let y_c = 15 - (y + glyph_offset_y as u32); // 16 - 1 == glyph max height
             if x_o + x_c > self.img_width - 1 || y_o + y_c > self.img_height - 1 { return }
             let color = if v > 0.0 { Rgba([255, 255, 255, 255]) }
             else { Rgba([0, 0, 0, 255]) };
