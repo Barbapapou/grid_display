@@ -4,12 +4,15 @@ use std::ptr;
 use rusttype::gpu_cache::Cache;
 use gl::types::*;
 use image::{DynamicImage, GenericImage, Rgba};
+use rand::{Rng, thread_rng};
 use rusttype::{Point, Scale};
 use crate::cache_glyph::CacheGlyph;
 use crate::gl_error_check::gl_error_check;
 use crate::UNIFONT;
 
 pub struct GridPerf {
+    width: u32,
+    height: u32,
     vao: u32,
     program: u32,
     nb_vertex: i32,
@@ -105,7 +108,7 @@ impl GridPerf {
         let mut cache_glyph = CacheGlyph::new();
         // TEMP
 
-        for i in 0..=256 {
+        for i in 0..(width * height) {
             let rect = cache_glyph.get_uv_layout(std::char::from_u32(i).unwrap());
             let offset_tc: usize = (i * 8) as usize;
             texture_coordinate[offset_tc]     = rect.max.x; texture_coordinate[offset_tc + 1] = rect.max.y;
@@ -116,10 +119,12 @@ impl GridPerf {
 
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, texture_coordinate_buffer);
-            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (256*8 * size_of::<f32>()) as isize, texture_coordinate.as_ptr() as *const c_void);
+            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (texture_coordinate.len() * size_of::<f32>()) as isize, texture_coordinate.as_ptr() as *const c_void);
         }
 
         GridPerf {
+            width,
+            height,
             vao,
             program,
             nb_vertex: i_b_count as i32,
@@ -135,10 +140,21 @@ impl GridPerf {
     }
 
     pub unsafe fn draw(&mut self) {
+        let mut rng = thread_rng();
+
+        for i in 0..(self.width * self.height) {
+            let rect = self.cache_glyph.get_uv_layout(std::char::from_u32((rng.gen::<f32>() * 255.0) as u32).unwrap());
+            let offset_tc: usize = (i * 8) as usize;
+            let texture_coordinate = &mut self.texture_coordinate;
+            texture_coordinate[offset_tc]     = rect.max.x; texture_coordinate[offset_tc + 1] = rect.max.y;
+            texture_coordinate[offset_tc + 2] = rect.max.x; texture_coordinate[offset_tc + 3] = rect.min.y;
+            texture_coordinate[offset_tc + 4] = rect.min.x; texture_coordinate[offset_tc + 5] = rect.min.y;
+            texture_coordinate[offset_tc + 6] = rect.min.x; texture_coordinate[offset_tc + 7] = rect.max.y;
+        }
 
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, self.texture_coordinate_buffer);
-            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (self.nb_vertex as usize * size_of::<f32>()) as isize, self.texture_coordinate.as_ptr() as *const c_void);
+            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (self.texture_coordinate.len() * size_of::<f32>()) as isize, self.texture_coordinate.as_ptr() as *const c_void);
         }
 
         self.cache_glyph.update_texture();

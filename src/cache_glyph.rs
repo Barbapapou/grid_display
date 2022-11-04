@@ -18,8 +18,8 @@ pub struct CacheGlyph {
 
 impl CacheGlyph {
     pub fn new() -> CacheGlyph {
-        let img_width = 1024;
-        let img_height = 1024;
+        let img_width = 2048;
+        let img_height = 2048;
 
         let char_to_rect = HashMap::new();
         let img = DynamicImage::new_rgba8(img_width, img_height);
@@ -61,7 +61,7 @@ impl CacheGlyph {
                 gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, self.img_width as i32, self.img_height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, self.img.as_bytes().as_ptr() as *const c_void);
                 gl::GenerateMipmap(gl::TEXTURE_2D);
             }
-            self.img.save("img.png").expect("TODO: panic message");
+            // self.img.save("img.png").expect("TODO: panic message");
             self.is_dirty = false;
         }
     }
@@ -84,15 +84,15 @@ impl CacheGlyph {
         let bounding_box = glyph.pixel_bounding_box().unwrap_or(Rect{min: Point{x:0, y:0}, max: Point{x:0, y:0}});
         let glyph_width = bounding_box.width();
         let glyph_height = bounding_box.height();
-        let glyph_offset_x = bounding_box.min.x;
+        let glyph_offset_x = bounding_box.min.x.abs();
         let glyph_offset_y = bounding_box.min.y;
         println!("{c}, min_x: {glyph_offset_x}, min_y: {glyph_offset_y}, width: {glyph_width}, height: {glyph_height}");
         let x_o = self.nbr_glyph * 8 % self.img_width;
         let y_o = self.nbr_glyph * 8 / self.img_width * 16;
         glyph.draw(|x, y, v| {
-            if x_o + x > self.img_width - 1 || y_o + y > self.img_height - 1 { return }
             let x_c = x + glyph_offset_x as u32;
             let y_c = 15 - (y + glyph_offset_y as u32); // 15 == glyph max height
+            if x_o + x_c > self.img_width - 1 || y_o + y_c > self.img_height - 1 { return }
             let color = if v > 0.0 { Rgba([255, 255, 255, 255]) }
             else { Rgba([0, 0, 0, 255]) };
             self.img.put_pixel(
@@ -106,9 +106,13 @@ impl CacheGlyph {
         let min = Vector2f {x: x_o as f32 / self.img_width as f32, y: y_o as f32 / self.img_height as f32 };
         let max = Vector2f {x: (x_o + 8) as f32 / self.img_width as f32, y: (y_o + 16) as f32 / self.img_height as f32 };
 
-        UvLayout {
+        let uv_layout = UvLayout {
             min,
             max
-        }
+        };
+
+        self.char_to_rect.insert(c, uv_layout);
+
+        uv_layout
     }
 }
