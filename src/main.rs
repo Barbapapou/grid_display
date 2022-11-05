@@ -9,6 +9,7 @@ mod grid_perf;
 mod gl_error_check;
 mod cache_glyph;
 mod util;
+mod char_grid;
 
 extern crate gl;
 extern crate glfw;
@@ -26,7 +27,7 @@ use crate::grid::Grid;
 use crate::grid_perf::GridPerf;
 use crate::screen::Screen;
 
-struct Application {
+pub struct Application {
     aspect_ratio: f32,
     width: u32,
     height: u32,
@@ -55,15 +56,14 @@ void main() {
 const FRAGMENT_SHADER_SOURCE: &[u8] = b"
 #version 330 core
 in vec2 iUv;
-out vec4 FragColor;
 uniform sampler2D uSampler;
 uniform vec4 uFgColor;
 uniform vec4 uBgColor;
 void main() {
     vec4 textureSample = texture(uSampler, iUv);
-    FragColor = textureSample;
-    // FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
-    // FragColor = mix(uBgColor, uFgColor, textureSample.x);
+    gl_FragColor = textureSample;
+    // gl_FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
+    // gl_FragColor = mix(uBgColor, uFgColor, textureSample.x);
 }\0";
 
 const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
@@ -132,17 +132,15 @@ fn main() -> Result<(), ()> {
             handle_window_event(&mut window, event);
         }
 
-        // screen.update(delta_time, app, cursor_position);
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            grid_perf.draw();
-            // screen.grid.draw();
+            grid_perf.draw(delta_time, cursor_position);
         }
 
         window.swap_buffers();
         glfw.poll_events();
         delta_time = start_frame_time.elapsed().as_millis();
-        println!("{delta_time}");
+        // println!("{delta_time}");
     }
 
     Ok(())
@@ -250,5 +248,7 @@ fn load_gl_functions(window: &mut Window) {
     gl::Uniform4f::load_with(|_s| window.get_proc_address("glUniform4f"));
     gl::UseProgram::load_with(|_s| window.get_proc_address("glUseProgram"));
     gl::Viewport::load_with(|_s| window.get_proc_address("glViewport"));
+    gl::VertexAttribDivisor::load_with(|_s| window.get_proc_address("glVertexAttribDivisor"));
     gl::VertexAttribPointer::load_with(|_s| window.get_proc_address("glVertexAttribPointer"));
+
 }

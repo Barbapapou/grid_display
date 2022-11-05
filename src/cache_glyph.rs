@@ -18,11 +18,16 @@ pub struct CacheGlyph {
 
 impl CacheGlyph {
     pub fn new() -> CacheGlyph {
-        let img_width = 2048;
-        let img_height = 2048;
+        let img_width = 1024;
+        let img_height = 1024;
 
         let char_to_rect = HashMap::new();
-        let img = DynamicImage::new_rgba8(img_width, img_height);
+        let mut img = DynamicImage::new_rgba8(img_width, img_height);
+        for x in 0..img_width {
+            for y in 0..img_height {
+                img.put_pixel(x, y, Rgba([0, 0, 0, 255]))
+            }
+        }
 
         let mut texture: u32 = 0;
         unsafe {
@@ -51,17 +56,11 @@ impl CacheGlyph {
     pub fn update_texture(&mut self) {
         if self.is_dirty {
             unsafe {
-                gl::GenTextures(1, &mut self.texture);
-                gl::ActiveTexture(gl::TEXTURE0);
                 gl::BindTexture(gl::TEXTURE_2D, self.texture);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
-                gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
                 gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, self.img_width as i32, self.img_height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, self.img.as_bytes().as_ptr() as *const c_void);
                 gl::GenerateMipmap(gl::TEXTURE_2D);
             }
-            // self.img.save("img.png").expect("TODO: panic message");
+            self.img.save("img.png").expect("TODO: panic message");
             self.is_dirty = false;
         }
     }
@@ -72,6 +71,7 @@ impl CacheGlyph {
         if uv_layout.is_none() {
             temp = self.gen_new_layout(c);
             uv_layout = Some(&temp);
+            self.is_dirty = true;
         }
         *uv_layout.unwrap()
     }
@@ -112,7 +112,6 @@ impl CacheGlyph {
         };
 
         self.char_to_rect.insert(c, uv_layout);
-
         uv_layout
     }
 }

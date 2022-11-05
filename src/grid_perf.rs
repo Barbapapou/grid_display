@@ -4,6 +4,7 @@ use std::ptr;
 use gl::types::*;
 use rand::{Rng, thread_rng};
 use crate::cache_glyph::CacheGlyph;
+use crate::char_grid::CharGrid;
 
 pub struct GridPerf {
     width: u32,
@@ -18,7 +19,7 @@ pub struct GridPerf {
     vertex_position_attrib_location: GLint,
     texture_coordinate_attrib_location: GLint,
     cache_glyph: CacheGlyph,
-    char_vec: Vec<char>
+    char_vec: Vec<CharGrid>
 }
 
 impl GridPerf {
@@ -100,22 +101,12 @@ impl GridPerf {
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * size_of::<f32>()) as isize, indices.as_ptr() as *const c_void, gl::STATIC_DRAW);
         }
 
-        let mut cache_glyph = CacheGlyph::new();
-        // TEMP
-
-        for i in 0..(width * height) {
-            let rect = cache_glyph.get_uv_layout(std::char::from_u32(i).unwrap());
-            let offset_tc: usize = (i * 8) as usize;
-            texture_coordinate[offset_tc]     = rect.max.x; texture_coordinate[offset_tc + 1] = rect.max.y;
-            texture_coordinate[offset_tc + 2] = rect.max.x; texture_coordinate[offset_tc + 3] = rect.min.y;
-            texture_coordinate[offset_tc + 4] = rect.min.x; texture_coordinate[offset_tc + 5] = rect.min.y;
-            texture_coordinate[offset_tc + 6] = rect.min.x; texture_coordinate[offset_tc + 7] = rect.max.y;
-        }
-
-        unsafe {
-            gl::BindBuffer(gl::ARRAY_BUFFER, texture_coordinate_buffer);
-            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (texture_coordinate.len() * size_of::<f32>()) as isize, texture_coordinate.as_ptr() as *const c_void);
-        }
+        let cache_glyph = CacheGlyph::new();
+        let char_vec = vec![CharGrid {
+            char: ' ',
+            fg_color: [1.0, 1.0, 1.0, 1.0],
+            bg_color: [0.0, 0.0, 0.0, 1.0]
+        }; (width * height) as usize];
 
         GridPerf {
             width,
@@ -130,15 +121,23 @@ impl GridPerf {
             vertex_position_attrib_location,
             texture_coordinate_attrib_location,
             cache_glyph,
-            char_vec: vec![]
+            char_vec
         }
     }
 
-    pub unsafe fn draw(&mut self) {
-        let mut rng = thread_rng();
+    pub unsafe fn draw(&mut self, delta_time: u128, cursor_position: (f64, f64)) {
+        self.clear();
+
+        let delta_time_str = format!("{delta_time} ms");
+        self.write_at(0, 0, &delta_time_str);
+        self.write_at(5, 5, "Hello world!");
+        let mouse_pos_x = cursor_position.0;
+        let mouse_pos_y = cursor_position.1;
+        let mouse_pos_str = format!("Mouse coordinate: {mouse_pos_x}, {mouse_pos_y}.");
+        self.write_at(0,3, &mouse_pos_str);
 
         for i in 0..(self.width * self.height) {
-            let rect = self.cache_glyph.get_uv_layout(std::char::from_u32((rng.gen::<f32>() * 255.0) as u32).unwrap());
+            let rect = self.cache_glyph.get_uv_layout(self.char_vec[i as usize].char);
             let offset_tc: usize = (i * 8) as usize;
             let texture_coordinate = &mut self.texture_coordinate;
             texture_coordinate[offset_tc]     = rect.max.x; texture_coordinate[offset_tc + 1] = rect.max.y;
@@ -147,15 +146,57 @@ impl GridPerf {
             texture_coordinate[offset_tc + 6] = rect.min.x; texture_coordinate[offset_tc + 7] = rect.max.y;
         }
 
-        unsafe {
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.texture_coordinate_buffer);
-            gl::BufferSubData(gl::ARRAY_BUFFER, 0, (self.texture_coordinate.len() * size_of::<f32>()) as isize, self.texture_coordinate.as_ptr() as *const c_void);
-        }
+        gl::BindBuffer(gl::ARRAY_BUFFER, self.texture_coordinate_buffer);
+        gl::BufferSubData(gl::ARRAY_BUFFER, 0, (self.texture_coordinate.len() * size_of::<f32>()) as isize, self.texture_coordinate.as_ptr() as *const c_void);
 
         self.cache_glyph.update_texture();
         gl::UseProgram(self.program);
         gl::BindVertexArray(self.vao);
         gl::BindTexture(gl::TEXTURE_2D, self.cache_glyph.texture);
         gl::DrawElements(gl::TRIANGLES, self.nb_vertex, gl::UNSIGNED_INT, ptr::null());
+    }
+
+    /*
+    Modification
+     */
+
+    pub fn clear(&mut self) {
+        for char in self.char_vec.as_mut_slice() {
+            char.switch_char(' ');
+            char.switch_fg_color([1.0, 1.0, 1.0, 1.0]);
+            char.switch_bg_color([0.0, 0.0, 0.0, 1.0]);
+        }
+    }
+
+    pub fn clear_char(&mut self) {
+        for char in self.char_vec.as_mut_slice() {
+            char.switch_char(' ');
+        }
+    }
+
+    pub fn clear_fg_color(&mut self) {
+        for char in self.char_vec.as_mut_slice() {
+            char.switch_fg_color([1.0, 1.0, 1.0, 1.0]);
+        }
+    }
+
+    pub fn clear_bg_color(&mut self) {
+        for quad in self.char_vec.as_mut_slice() {
+            quad.switch_bg_color([0.0, 0.0, 0.0, 1.0]);
+        }
+    }
+
+    pub fn write_at(&mut self, x: i32, y: i32, text: &str) {
+        let text_vec: Vec<char> = text.chars().collect();
+        let mut text_len = text_vec.len() as i32;
+        let start_position = y * self.width as i32 + x;
+        if start_position + text_len > self.char_vec.len() as i32 - 1 {
+            let to_trim = start_position + (text_len - 1) - (self.char_vec.len() as i32 - 1);
+            text_len -= to_trim;
+        }
+        for text_index in 0..text_len {
+            let char = &mut self.char_vec[(start_position + text_index) as usize];
+            char.switch_char(text_vec[text_index as usize]);
+        }
     }
 }
