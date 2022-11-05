@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use std::ffi::c_void;
 use image::{DynamicImage, GenericImage, Rgba};
-use rusttype::{Point, Rect};
-use crate::glyph_info::SCALE_GLYPH;
+use rusttype::{Point, Rect, Scale};
 use crate::UNIFONT;
 use crate::util::{UvLayout, Vector2, Vector2f};
+
+const SCALE_GLYPH: Scale = Scale{x:16.0, y:16.0};
 
 pub struct CacheGlyph {
     char_to_rect: HashMap<char, UvLayout>,

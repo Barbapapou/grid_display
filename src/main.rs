@@ -1,15 +1,12 @@
 mod quad;
-mod glyph_info;
-mod grid;
 mod box_drawing;
 mod ui_element;
 mod ui_text;
 mod screen;
-mod grid_perf;
+mod grid;
 mod gl_error_check;
 mod cache_glyph;
 mod util;
-mod char_grid;
 
 extern crate gl;
 extern crate glfw;
@@ -20,11 +17,9 @@ use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, SwapInterval, Window, WindowHint};
 use std::ptr;
 use std::time::Instant;
-use quad::Quad;
+
 use rusttype::Font;
-use crate::glyph_info::{GLYPH_CACHE, UNIFONT};
 use crate::grid::Grid;
-use crate::grid_perf::GridPerf;
 use crate::screen::Screen;
 
 pub struct Application {
@@ -74,10 +69,10 @@ void main() {
 }\0";
 
 const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
+pub static mut UNIFONT: Option<Font> = None;
 
 fn main() -> Result<(), ()> {
     unsafe{
-        GLYPH_CACHE = Some(HashMap::new());
         UNIFONT = Font::try_from_bytes(UNIFONT_DATA);
     };
 
@@ -125,9 +120,7 @@ fn main() -> Result<(), ()> {
         gl::DeleteShader(fragment_shader);
     }
 
-    let mut grid_perf = GridPerf::new(16*2*5, 9*5, shader_program);
-
-    // let mut screen = Screen::new(shader_program);
+    let mut screen = Screen::new(shader_program);
     let mut delta_time = 0;
 
     while !window.should_close() {
@@ -137,9 +130,11 @@ fn main() -> Result<(), ()> {
             handle_window_event(&mut window, event);
         }
 
+        screen.update(delta_time, app, cursor_position);
+
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            grid_perf.draw(app, delta_time, cursor_position);
+            screen.grid.draw(app, delta_time, cursor_position);
         }
 
         window.swap_buffers();

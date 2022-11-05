@@ -5,8 +5,8 @@ use crate::ui_text::UiText;
 
 pub struct Screen {
     pub grid: Grid,
-    grid_width: i32,
-    grid_height: i32,
+    grid_width: u32,
+    grid_height: u32,
     pub ui_elements: Vec<Box<dyn UiElement>>,
 }
 
@@ -49,7 +49,7 @@ impl Screen {
         let grid_pos_y = (mouse_pos_y / app.height as f64 * self.grid_height as f64).floor() as i32;
         let mouse_pos_str = format!("Grid coordinate: {grid_pos_x}, {grid_pos_y}");
         self.grid.write_at(0,4, &mouse_pos_str);
-        if grid_pos_x >= 0 && grid_pos_x < self.grid_width && grid_pos_y >= 0 && grid_pos_y < self.grid_height {
+        if grid_pos_x >= 0 && grid_pos_x < self.grid_width as i32 && grid_pos_y >= 0 && grid_pos_y < self.grid_height as i32 {
             self.grid.inverse_color_at(grid_pos_x as i32, grid_pos_y as i32);
         }
     }
