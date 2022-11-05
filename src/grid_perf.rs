@@ -2,7 +2,9 @@ use std::ffi::c_void;
 use std::mem::size_of;
 use std::ptr;
 use gl::types::*;
-use rand::{Rng, thread_rng};
+use rand::{thread_rng};
+use crate::Application;
+use crate::box_drawing::BoxDrawing;
 use crate::cache_glyph::CacheGlyph;
 use crate::char_grid::CharGrid;
 
@@ -12,12 +14,12 @@ pub struct GridPerf {
     vao: u32,
     program: u32,
     nb_vertex: i32,
-    vertex_position_buffer: u32,
     texture_coordinate_buffer: u32,
     texture_coordinate: Vec<f32>,
-    indices_buffer: u32,
-    vertex_position_attrib_location: GLint,
-    texture_coordinate_attrib_location: GLint,
+    fg_color_buffer: u32,
+    fg_color: Vec<f32>,
+    bg_color_buffer: u32,
+    bg_color: Vec<f32>,
     cache_glyph: CacheGlyph,
     char_vec: Vec<CharGrid>
 }
@@ -29,9 +31,12 @@ impl GridPerf {
 
         let mut vertex_position: Vec<f32> = vec![0.0; (12 * width * height) as usize];
         let mut texture_coordinate: Vec<f32> = vec![0.0; (8 * width * height) as usize];
+        let mut fg_color: Vec<f32> = vec![0.0; (16 * width * height) as usize];
+        let mut bg_color: Vec<f32> = vec![0.0; (16 * width * height) as usize];
         let mut indices: Vec<u32> = vec![0; (6 * width * height) as usize];
         let mut vp_b_count: usize = 0;
         let mut tc_b_count: usize = 0;
+        let mut c_b_count: usize = 0;
         let mut i_b_count: usize = 0;
         let mut v_count: u32 = 0;
 
@@ -58,6 +63,21 @@ impl GridPerf {
                 ];
                 texture_coordinate[tc_b_count..(tc_b_count + 8)].copy_from_slice(&texture_coordinate_t);
 
+                // Can cut the memory cost by 4 using instancing and glVertexAttribPointer, not sure it would give better performance tho
+                let fg_color_t: [f32; 16] = [
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0];
+                fg_color[c_b_count..(c_b_count+16)].copy_from_slice(&fg_color_t);
+
+                let bg_color_t: [f32; 16] = [
+                    0.0, 0.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0, 1.0];
+                bg_color[c_b_count..(c_b_count+16)].copy_from_slice(&bg_color_t);
+
                 let indices_t: [u32; 6] = [
                     v_count    , v_count + 1, v_count + 3,
                     v_count + 1, v_count + 2, v_count + 3
@@ -66,6 +86,7 @@ impl GridPerf {
 
                 vp_b_count += 12;
                 tc_b_count += 8;
+                c_b_count += 16;
                 i_b_count += 6;
                 v_count += 4;
             }
@@ -74,9 +95,13 @@ impl GridPerf {
         let mut vao: u32 = 0;
         let mut vertex_position_buffer: u32 = 0;
         let mut texture_coordinate_buffer: u32 = 0;
+        let mut fg_color_buffer: u32 = 0;
+        let mut bg_color_buffer: u32 = 0;
         let mut indices_buffer: u32 = 0;
-        let mut vertex_position_attrib_location: GLint = 0;
-        let mut texture_coordinate_attrib_location: GLint = 0;
+        let vertex_position_attrib_location: GLint;
+        let texture_coordinate_attrib_location: GLint;
+        let fg_color_attrib_location: GLint;
+        let bg_color_attrib_location: GLint;
 
         unsafe {
             gl::GenVertexArrays(1, &mut vao);
@@ -96,6 +121,20 @@ impl GridPerf {
             gl::VertexAttribPointer(texture_coordinate_attrib_location as GLuint, 2, gl::FLOAT, gl::FALSE, 0, ptr::null::<c_void>());
             gl::EnableVertexAttribArray(texture_coordinate_attrib_location as GLuint);
 
+            fg_color_attrib_location = gl::GetAttribLocation(program, b"aFgColor\0".as_ptr() as *const i8);
+            gl::GenBuffers(1, &mut fg_color_buffer);
+            gl::BindBuffer(gl::ARRAY_BUFFER, fg_color_buffer);
+            gl::BufferData(gl::ARRAY_BUFFER, (fg_color.len() * size_of::<f32>()) as isize, fg_color.as_ptr() as *const c_void, gl::DYNAMIC_DRAW);
+            gl::VertexAttribPointer(fg_color_attrib_location as GLuint, 4, gl::FLOAT, gl::FALSE, 0, ptr::null::<c_void>());
+            gl::EnableVertexAttribArray(fg_color_attrib_location as GLuint);
+
+            bg_color_attrib_location = gl::GetAttribLocation(program, b"aBgColor\0".as_ptr() as *const i8);
+            gl::GenBuffers(1, &mut bg_color_buffer);
+            gl::BindBuffer(gl::ARRAY_BUFFER, bg_color_buffer);
+            gl::BufferData(gl::ARRAY_BUFFER, (bg_color.len() * size_of::<f32>()) as isize, bg_color.as_ptr() as *const c_void, gl::DYNAMIC_DRAW);
+            gl::VertexAttribPointer(bg_color_attrib_location as GLuint, 4, gl::FLOAT, gl::FALSE, 0, ptr::null::<c_void>());
+            gl::EnableVertexAttribArray(bg_color_attrib_location as GLuint);
+
             gl::GenBuffers(1, &mut indices_buffer);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, indices_buffer);
             gl::BufferData(gl::ELEMENT_ARRAY_BUFFER, (indices.len() * size_of::<f32>()) as isize, indices.as_ptr() as *const c_void, gl::STATIC_DRAW);
@@ -114,40 +153,67 @@ impl GridPerf {
             vao,
             program,
             nb_vertex: i_b_count as i32,
-            vertex_position_buffer,
             texture_coordinate_buffer,
             texture_coordinate,
-            indices_buffer,
-            vertex_position_attrib_location,
-            texture_coordinate_attrib_location,
+            fg_color_buffer,
+            fg_color,
+            bg_color_buffer,
+            bg_color,
             cache_glyph,
             char_vec
         }
     }
 
-    pub unsafe fn draw(&mut self, delta_time: u128, cursor_position: (f64, f64)) {
+    pub unsafe fn draw(&mut self, app: &Application, delta_time: u128, cursor_position: (f64, f64)) {
         self.clear();
 
         let delta_time_str = format!("{delta_time} ms");
-        self.write_at(0, 0, &delta_time_str);
+        self.write_at(1, 1, &delta_time_str);
+        self.write_box(0, 0, delta_time_str.len() as i32 + 1, 2, BoxDrawing::Arc);
         self.write_at(5, 5, "Hello world!");
         let mouse_pos_x = cursor_position.0;
         let mouse_pos_y = cursor_position.1;
-        let mouse_pos_str = format!("Mouse coordinate: {mouse_pos_x}, {mouse_pos_y}.");
+        let mouse_pos_str = format!("Mouse coordinate: {mouse_pos_x}, {mouse_pos_y}");
         self.write_at(0,3, &mouse_pos_str);
+        let grid_pos_x = (mouse_pos_x / app.width as f64 * self.width as f64).floor() as i32;
+        let grid_pos_y = (mouse_pos_y / app.height as f64 * self.height as f64).floor() as i32;
+        let mouse_pos_str = format!("Grid coordinate: {grid_pos_x}, {grid_pos_y}");
+        self.write_at(0,4, &mouse_pos_str);
+        if grid_pos_x >= 0 && grid_pos_x < self.width as i32 && grid_pos_y >= 0 && grid_pos_y < self.height as i32 {
+            self.inverse_color_at(grid_pos_x as i32, grid_pos_y as i32);
+        }
 
         for i in 0..(self.width * self.height) {
             let rect = self.cache_glyph.get_uv_layout(self.char_vec[i as usize].char);
             let offset_tc: usize = (i * 8) as usize;
+            let offset_c: usize = (i * 16) as usize;
             let texture_coordinate = &mut self.texture_coordinate;
             texture_coordinate[offset_tc]     = rect.max.x; texture_coordinate[offset_tc + 1] = rect.max.y;
             texture_coordinate[offset_tc + 2] = rect.max.x; texture_coordinate[offset_tc + 3] = rect.min.y;
             texture_coordinate[offset_tc + 4] = rect.min.x; texture_coordinate[offset_tc + 5] = rect.min.y;
             texture_coordinate[offset_tc + 6] = rect.min.x; texture_coordinate[offset_tc + 7] = rect.max.y;
+            let fg_color = &mut self.fg_color;
+            let fg_color_t = self.char_vec[i as usize].fg_color;
+            let bg_color = &mut self.bg_color;
+            let bg_color_t = self.char_vec[i as usize].bg_color;
+            for i in 0..4 {
+                bg_color[offset_c + i * 4]     = bg_color_t[0];
+                bg_color[offset_c + i * 4 + 1] = bg_color_t[1];
+                bg_color[offset_c + i * 4 + 2] = bg_color_t[2];
+                bg_color[offset_c + i * 4 + 3] = bg_color_t[3];
+                fg_color[offset_c + i * 4]     = fg_color_t[0];
+                fg_color[offset_c + i * 4 + 1] = fg_color_t[1];
+                fg_color[offset_c + i * 4 + 2] = fg_color_t[2];
+                fg_color[offset_c + i * 4 + 3] = fg_color_t[3];
+            }
         }
 
         gl::BindBuffer(gl::ARRAY_BUFFER, self.texture_coordinate_buffer);
         gl::BufferSubData(gl::ARRAY_BUFFER, 0, (self.texture_coordinate.len() * size_of::<f32>()) as isize, self.texture_coordinate.as_ptr() as *const c_void);
+        gl::BindBuffer(gl::ARRAY_BUFFER, self.fg_color_buffer);
+        gl::BufferSubData(gl::ARRAY_BUFFER, 0, (self.fg_color.len() * size_of::<f32>()) as isize, self.fg_color.as_ptr() as *const c_void);
+        gl::BindBuffer(gl::ARRAY_BUFFER, self.bg_color_buffer);
+        gl::BufferSubData(gl::ARRAY_BUFFER, 0, (self.bg_color.len() * size_of::<f32>()) as isize, self.bg_color.as_ptr() as *const c_void);
 
         self.cache_glyph.update_texture();
         gl::UseProgram(self.program);
@@ -198,5 +264,41 @@ impl GridPerf {
             let char = &mut self.char_vec[(start_position + text_index) as usize];
             char.switch_char(text_vec[text_index as usize]);
         }
+    }
+
+    pub fn write_box(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32, box_style: BoxDrawing) {
+        let char = self.char_vec.as_mut_slice();
+        let (h_line, v_line, l_l_corner, u_l_corner, l_r_corner, u_r_corner) = BoxDrawing::get_char(box_style);
+        for x in x_start..=x_end {
+            for y in y_start..=y_end {
+                let index = (y * self.width as i32 + x) as usize;
+                if (x != x_start && x != x_end && y != y_start && y != y_end) || index > (self.width * self.height) as usize {
+                    continue;
+                }
+                if x == x_start && y == y_start {
+                    char[index].switch_char(l_l_corner);
+                }
+                else if x == x_end && y == y_end {
+                    char[index].switch_char(u_r_corner);
+                }
+                else if x == x_start && y == y_end {
+                    char[index].switch_char(u_l_corner);
+                }
+                else if x == x_end && y == y_start {
+                    char[index].switch_char(l_r_corner);
+                }
+                else if x == x_start || x == x_end {
+                    char[index].switch_char(v_line);
+                }
+                else if y == y_start || y == y_end {
+                    char[index].switch_char(h_line);
+                }
+            }
+        }
+    }
+
+    pub fn inverse_color_at(&mut self, x: i32, y: i32) {
+        let quad = &mut self.char_vec.as_mut_slice()[(x + y * self.width as i32) as usize];
+        std::mem::swap(&mut quad.fg_color, &mut quad.bg_color);
     }
 }

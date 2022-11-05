@@ -60,7 +60,7 @@ impl CacheGlyph {
                 gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, self.img_width as i32, self.img_height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, self.img.as_bytes().as_ptr() as *const c_void);
                 gl::GenerateMipmap(gl::TEXTURE_2D);
             }
-            self.img.save("img.png").expect("TODO: panic message");
+            // self.img.save("img.png").expect("TODO: panic message");
             self.is_dirty = false;
         }
     }

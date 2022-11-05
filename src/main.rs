@@ -45,25 +45,32 @@ static mut APPLICATION: Application = Application{
 
 const VERTEX_SHADER_SOURCE: &[u8] = b"
 #version 330 core
-attribute vec3 aVertexPosition;
-attribute vec2 aTextureCoord;
+in vec3 aVertexPosition;
+in vec2 aTextureCoord;
+in vec4 aFgColor;
+in vec4 aBgColor;
 out vec2 iUv;
+out vec4 iFgColor;
+out vec4 iBgColor;
 void main() {
     gl_Position = vec4(aVertexPosition, 1.0);
     iUv = aTextureCoord;
+    iFgColor = aFgColor;
+    iBgColor = aBgColor;
 }\0";
 
 const FRAGMENT_SHADER_SOURCE: &[u8] = b"
 #version 330 core
 in vec2 iUv;
+in vec4 iFgColor;
+in vec4 iBgColor;
 uniform sampler2D uSampler;
 uniform vec4 uFgColor;
-uniform vec4 uBgColor;
 void main() {
     vec4 textureSample = texture(uSampler, iUv);
-    gl_FragColor = textureSample;
+    // gl_FragColor = textureSample;
     // gl_FragColor = vec4(iUv.x, iUv.y, 1.0, 1.0);
-    // gl_FragColor = mix(uBgColor, uFgColor, textureSample.x);
+    gl_FragColor = mix(iBgColor, iFgColor, textureSample.x);
 }\0";
 
 const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
@@ -132,7 +139,7 @@ fn main() -> Result<(), ()> {
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            grid_perf.draw(delta_time, cursor_position);
+            grid_perf.draw(app, delta_time, cursor_position);
         }
 
         window.swap_buffers();
