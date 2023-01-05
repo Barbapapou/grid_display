@@ -140,7 +140,6 @@ fn main() -> Result<(), ()> {
         window.swap_buffers();
         glfw.poll_events();
         delta_time = start_frame_time.elapsed().as_millis();
-        // println!("{delta_time}");
     }
 
     Ok(())

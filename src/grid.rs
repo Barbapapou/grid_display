@@ -21,7 +21,7 @@ pub struct Grid {
     bg_color_buffer: u32,
     bg_color: Vec<f32>,
     cache_glyph: CacheGlyph,
-    char_vec: Vec<Quad>
+    quads: Vec<Quad>
 }
 
 impl Grid {
@@ -141,7 +141,7 @@ impl Grid {
         }
 
         let cache_glyph = CacheGlyph::new();
-        let char_vec = vec![Quad {
+        let quads = vec![Quad {
             char: ' ',
             fg_color: [1.0, 1.0, 1.0, 1.0],
             bg_color: [0.0, 0.0, 0.0, 1.0]
@@ -160,14 +160,14 @@ impl Grid {
             bg_color_buffer,
             bg_color,
             cache_glyph,
-            char_vec
+            quads
         }
     }
 
     pub unsafe fn draw(&mut self, app: &Application, delta_time: u128, cursor_position: (f64, f64)) {
 
         for i in 0..(self.width * self.height) {
-            let rect = self.cache_glyph.get_uv_layout(self.char_vec[i as usize].char);
+            let rect = self.cache_glyph.get_uv_layout(self.quads[i as usize].char);
             let offset_tc: usize = (i * 8) as usize;
             let offset_c: usize = (i * 16) as usize;
             let texture_coordinate = &mut self.texture_coordinate;
@@ -176,9 +176,9 @@ impl Grid {
             texture_coordinate[offset_tc + 4] = rect.min.x; texture_coordinate[offset_tc + 5] = rect.min.y;
             texture_coordinate[offset_tc + 6] = rect.min.x; texture_coordinate[offset_tc + 7] = rect.max.y;
             let fg_color = &mut self.fg_color;
-            let fg_color_t = self.char_vec[i as usize].fg_color;
+            let fg_color_t = self.quads[i as usize].fg_color;
             let bg_color = &mut self.bg_color;
-            let bg_color_t = self.char_vec[i as usize].bg_color;
+            let bg_color_t = self.quads[i as usize].bg_color;
             for i in 0..4 {
                 bg_color[offset_c + i * 4]     = bg_color_t[0];
                 bg_color[offset_c + i * 4 + 1] = bg_color_t[1];
@@ -210,7 +210,7 @@ impl Grid {
      */
 
     pub fn clear(&mut self) {
-        for char in self.char_vec.as_mut_slice() {
+        for char in self.quads.as_mut_slice() {
             char.switch_char(' ');
             char.switch_fg_color([1.0, 1.0, 1.0, 1.0]);
             char.switch_bg_color([0.0, 0.0, 0.0, 1.0]);
@@ -218,19 +218,19 @@ impl Grid {
     }
 
     pub fn clear_char(&mut self) {
-        for char in self.char_vec.as_mut_slice() {
+        for char in self.quads.as_mut_slice() {
             char.switch_char(' ');
         }
     }
 
     pub fn clear_fg_color(&mut self) {
-        for char in self.char_vec.as_mut_slice() {
+        for char in self.quads.as_mut_slice() {
             char.switch_fg_color([1.0, 1.0, 1.0, 1.0]);
         }
     }
 
     pub fn clear_bg_color(&mut self) {
-        for quad in self.char_vec.as_mut_slice() {
+        for quad in self.quads.as_mut_slice() {
             quad.switch_bg_color([0.0, 0.0, 0.0, 1.0]);
         }
     }
@@ -239,18 +239,18 @@ impl Grid {
         let text_vec: Vec<char> = text.chars().collect();
         let mut text_len = text_vec.len() as i32;
         let start_position = y * self.width as i32 + x;
-        if start_position + text_len > self.char_vec.len() as i32 - 1 {
-            let to_trim = start_position + (text_len - 1) - (self.char_vec.len() as i32 - 1);
+        if start_position + text_len > self.quads.len() as i32 - 1 {
+            let to_trim = start_position + (text_len - 1) - (self.quads.len() as i32 - 1);
             text_len -= to_trim;
         }
         for text_index in 0..text_len {
-            let char = &mut self.char_vec[(start_position + text_index) as usize];
+            let char = &mut self.quads[(start_position + text_index) as usize];
             char.switch_char(text_vec[text_index as usize]);
         }
     }
 
     pub fn write_box(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32, box_style: BoxDrawing) {
-        let char = self.char_vec.as_mut_slice();
+        let char = self.quads.as_mut_slice();
         let (h_line, v_line, l_l_corner, u_l_corner, l_r_corner, u_r_corner) = BoxDrawing::get_char(box_style);
         for x in x_start..=x_end {
             for y in y_start..=y_end {
@@ -281,17 +281,17 @@ impl Grid {
     }
 
     pub fn inverse_color_at(&mut self, x: i32, y: i32) {
-        let quad = &mut self.char_vec.as_mut_slice()[(x + y * self.width as i32) as usize];
+        let quad = &mut self.quads.as_mut_slice()[(x + y * self.width as i32) as usize];
         std::mem::swap(&mut quad.fg_color, &mut quad.bg_color);
     }
 
     pub fn switch_bg_at(&mut self, x: i32, y: i32, color: [f32;4]) {
-        self.char_vec.as_mut_slice()[(x + y * self.width as i32) as usize].switch_bg_color(color);
+        self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_bg_color(color);
     }
 
     pub fn shuffle_glyph(&mut self) {
         let mut rng = thread_rng();
-        for quad in self.char_vec.as_mut_slice() {
+        for quad in self.quads.as_mut_slice() {
             let char = char::from_u32((rng.gen::<f32>() * 128.0) as u32).unwrap_or('�');
             let fg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];
             let bg_color = [rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>(), 1.0];

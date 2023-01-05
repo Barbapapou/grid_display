@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 use std::ffi::c_void;
-use image::{DynamicImage, GenericImage, Rgba};
 use rusttype::{Point, Rect, Scale};
 use crate::UNIFONT;
-use crate::util::{UvLayout, Vector2, Vector2f};
+use crate::util::{UvLayout, Vector2f, RGBA8};
 
 const SCALE_GLYPH: Scale = Scale{x:16.0, y:16.0};
 
 pub struct CacheGlyph {
     char_to_rect: HashMap<char, UvLayout>,
-    img: DynamicImage,
+    img: Vec<RGBA8>,
     img_width: u32,
     img_height: u32,
     pub texture: u32,
@@ -19,16 +18,11 @@ pub struct CacheGlyph {
 
 impl CacheGlyph {
     pub fn new() -> CacheGlyph {
-        let img_width = 1024;
-        let img_height = 1024;
+        let img_width: u32 = 1024;
+        let img_height: u32 = 1024;
 
         let char_to_rect = HashMap::new();
-        let mut img = DynamicImage::new_rgba8(img_width, img_height);
-        for x in 0..img_width {
-            for y in 0..img_height {
-                img.put_pixel(x, y, Rgba([0, 0, 0, 255]))
-            }
-        }
+        let img = vec![RGBA8{r:0, b:0, g:0, a:255}; (img_width * img_height) as usize];
 
         let mut texture: u32 = 0;
         unsafe {
@@ -39,7 +33,7 @@ impl CacheGlyph {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, img_width as i32, img_height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, img.as_bytes().as_ptr() as *const c_void);
+            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, img_width as i32, img_height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, img.as_ptr() as *const c_void);
             gl::GenerateMipmap(gl::TEXTURE_2D);
         }
 
@@ -58,10 +52,9 @@ impl CacheGlyph {
         if self.is_dirty {
             unsafe {
                 gl::BindTexture(gl::TEXTURE_2D, self.texture);
-                gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, self.img_width as i32, self.img_height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, self.img.as_bytes().as_ptr() as *const c_void);
+                gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as i32, self.img_width as i32, self.img_height as i32, 0, gl::RGBA, gl::UNSIGNED_BYTE, self.img.as_ptr() as *const c_void);
                 gl::GenerateMipmap(gl::TEXTURE_2D);
             }
-            // self.img.save("img.png").expect("TODO: panic message");
             self.is_dirty = false;
         }
     }
@@ -94,13 +87,9 @@ impl CacheGlyph {
             let x_c = x + glyph_offset_x as u32;
             let y_c = 15 - (y + glyph_offset_y as u32); // 16 - 1 == glyph max height
             if x_o + x_c > self.img_width - 1 || y_o + y_c > self.img_height - 1 { return }
-            let color = if v > 0.0 { Rgba([255, 255, 255, 255]) }
-            else { Rgba([0, 0, 0, 255]) };
-            self.img.put_pixel(
-                x_o + x_c,
-                y_o + y_c,
-                color,
-            )
+            let color = if v > 0.0 {RGBA8{r:255, b:255, g:255, a:255}}
+            else {RGBA8{r:0, b:0, g:0, a:255}};
+            self.img[((x_o + x_c) + (y_o + y_c) * self.img_width) as usize] = color;
         });
         self.nbr_glyph += 1;
 
