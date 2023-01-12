@@ -19,6 +19,15 @@ impl UiText {
             box_type: BoxDrawing::Light
         }
     }
+
+    pub fn new_box(text: String, pos: Vector2, box_type: BoxDrawing) -> UiText {
+        UiText {
+            text,
+            pos,
+            box_around: true,
+            box_type
+        }
+    }
 }
 
 impl UiElement for UiText {
