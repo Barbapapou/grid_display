@@ -1,4 +1,3 @@
-use rand::{Rng, thread_rng};
 use crate::{Application, Grid};
 use crate::box_drawing::BoxDrawing;
 use crate::ui_element::UiElement;

@@ -12,7 +12,6 @@ extern crate gl;
 extern crate glfw;
 extern crate core;
 
-use std::collections::HashMap;
 use gl::types::*;
 use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, SwapInterval, Window, WindowHint};
 use std::ptr;
@@ -29,14 +28,6 @@ pub struct Application {
     window_width: u32,
     window_height: u32,
 }
-
-static mut APPLICATION: Application = Application{
-    aspect_ratio: 16.0/9.0,
-    width: 1280,
-    height: 720,
-    window_width: 1280,
-    window_height: 720,
-};
 
 const VERTEX_SHADER_SOURCE: &[u8] = b"
 #version 330 core
@@ -71,14 +62,19 @@ void main() {
 const UNIFONT_DATA:&[u8] = include_bytes!("unifont-15.0.01.ttf");
 pub static mut UNIFONT: Option<Font> = None;
 
-fn main() -> Result<(), ()> {
-    unsafe{
-        UNIFONT = Font::try_from_bytes(UNIFONT_DATA);
+fn main() {
+    unsafe{ UNIFONT = Font::try_from_bytes(UNIFONT_DATA); };
+
+    let mut app: Application = Application{
+        aspect_ratio: 16.0/9.0,
+        width: 1280,
+        height: 720,
+        window_width: 1280,
+        window_height: 720,
     };
 
-    let app = unsafe {&APPLICATION};
-
-    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS)
+        .expect("Failed to init GLFW.");
     Glfw::window_hint(&mut glfw, WindowHint::ContextVersion(3, 3));
     Glfw::window_hint(&mut glfw, WindowHint::OpenGlProfile(OpenGlProfileHint::Core));
 
@@ -125,30 +121,28 @@ fn main() -> Result<(), ()> {
 
     while !window.should_close() {
         let start_frame_time = Instant::now();
-        let cursor_position = get_mouse_position(app, &window);
+        let cursor_position = get_mouse_position(&app, &window);
         for (_, event) in glfw::flush_messages(&events) {
-            handle_window_event(&mut window, event);
+            handle_window_event(&mut app, &mut window, event);
         }
 
-        screen.update(delta_time, app, cursor_position);
+        screen.update(delta_time, &app, cursor_position);
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            screen.grid.draw(app, delta_time, cursor_position);
+            screen.grid.draw(&app, delta_time, cursor_position);
         }
 
         window.swap_buffers();
         glfw.poll_events();
         delta_time = start_frame_time.elapsed().as_millis();
     }
-
-    Ok(())
 }
 
-fn handle_window_event(window: &mut Window, event: glfw::WindowEvent) {
+fn handle_window_event(app: &mut Application, window: &mut Window, event: glfw::WindowEvent) {
     match event {
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
-        glfw::WindowEvent::FramebufferSize(width, height) => framebuffer_resize_event(width as f32, height as f32),
+        glfw::WindowEvent::FramebufferSize(width, height) => framebuffer_resize_event(app, width as f32, height as f32),
         _ => {}
     }
 }
@@ -162,8 +156,7 @@ fn get_mouse_position(app: &Application, window: &Window) -> (f64, f64) {
     (mouse_pos_x, mouse_pos_y)
 }
 
-fn framebuffer_resize_event(width: f32, height:f32) {
-    let mut app = unsafe {&mut APPLICATION};
+fn framebuffer_resize_event(app: &mut Application, width: f32, height:f32) {
     app.window_width = width as u32;
     app.window_height = height as u32;
     let mut width_c = width;
