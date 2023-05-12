@@ -39,16 +39,21 @@ impl Screen {
         }
 
         let delta_time_str = format!("{delta_time} ms");
-        self.grid.write_at(1, 1, &delta_time_str);
-        self.grid.write_box(0, 0, delta_time_str.len() as i32 + 1, 2, BoxDrawing::Arc);
+        let delta_time_ui_text = UiText::new_box(delta_time_str, Vector2 {x:1, y:1}, BoxDrawing::Arc);
+        delta_time_ui_text.draw(&mut self.grid);
+
         let mouse_pos_x = cursor_position.0;
         let mouse_pos_y = cursor_position.1;
         let mouse_pos_str = format!("Mouse coordinate: {mouse_pos_x}, {mouse_pos_y}");
-        self.grid.write_at(0,3, &mouse_pos_str);
+        let mouse_pos_ui_text = UiText::new_basic(mouse_pos_str, Vector2 {x:0, y:3});
+        mouse_pos_ui_text.draw(&mut self.grid);
+
         let grid_pos_x = (mouse_pos_x / app.width as f64 * self.grid_width as f64).floor() as i32;
         let grid_pos_y = (mouse_pos_y / app.height as f64 * self.grid_height as f64).floor() as i32;
         let mouse_pos_str = format!("Grid coordinate: {grid_pos_x}, {grid_pos_y}");
-        self.grid.write_at(0 ,4, &mouse_pos_str);
+        let mouse_pos_ui_text = UiText::new_basic(mouse_pos_str, Vector2 {x:0, y:4});
+        mouse_pos_ui_text.draw(&mut self.grid);
+
         if grid_pos_x >= 0 && grid_pos_x < self.grid_width as i32 && grid_pos_y >= 0 && grid_pos_y < self.grid_height as i32 {
             self.grid.inverse_color_at(grid_pos_x as i32, grid_pos_y as i32);
         }

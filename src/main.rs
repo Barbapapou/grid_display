@@ -130,7 +130,7 @@ fn main() {
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            screen.grid.draw(&app, delta_time, cursor_position);
+            screen.grid.draw();
         }
 
         window.swap_buffers();

@@ -164,7 +164,7 @@ impl Grid {
         }
     }
 
-    pub unsafe fn draw(&mut self, app: &Application, delta_time: u128, cursor_position: (f64, f64)) {
+    pub unsafe fn draw(&mut self) {
 
         for i in 0..(self.width * self.height) {
             let rect = self.cache_glyph.get_uv_layout(self.quads[i as usize].char);
