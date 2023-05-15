@@ -1,13 +1,14 @@
 use crate::box_drawing::BoxDrawing;
-use crate::Grid;
+use crate::{Application, Grid};
 use crate::ui_element::UiElement;
 use crate::util::Vector2;
 
 pub struct UiText {
-    text: String,
+    pub text: String,
     pos: Vector2,
     box_around: bool,
     box_type: BoxDrawing,
+    pub update_function: fn(&mut UiText, &Application, &Grid),
 }
 
 impl UiText {
@@ -16,7 +17,8 @@ impl UiText {
             text,
             pos,
             box_around: false,
-            box_type: BoxDrawing::Light
+            box_type: BoxDrawing::Light,
+            update_function: |ui_text: &mut UiText, app: &Application, grid: &Grid| {}
         }
     }
 
@@ -25,7 +27,8 @@ impl UiText {
             text,
             pos,
             box_around: true,
-            box_type
+            box_type,
+            update_function: |ui_text: &mut UiText, app: &Application, grid: &Grid| {}
         }
     }
 }
@@ -36,5 +39,9 @@ impl UiElement for UiText {
         if self.box_around {
             grid.write_box(self.pos.x - 1, self.pos.y - 1, self.pos.x + self.text.len() as i32, self.pos.y + 1, self.box_type);
         }
+    }
+
+    fn update(&mut self, app: &Application, grid: &Grid) {
+        self.update_function.call_once((self, app, grid));
     }
 }

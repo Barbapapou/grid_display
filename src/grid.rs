@@ -9,8 +9,8 @@ use crate::cache_glyph::CacheGlyph;
 use crate::quad::Quad;
 
 pub struct Grid {
-    width: u32,
-    height: u32,
+    pub width: u32,
+    pub height: u32,
     vao: u32,
     program: u32,
     nb_vertex: i32,

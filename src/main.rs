@@ -1,3 +1,5 @@
+#![feature(fn_traits)]
+
 mod quad;
 mod box_drawing;
 mod ui_element;
@@ -27,6 +29,7 @@ pub struct Application {
     height: u32,
     window_width: u32,
     window_height: u32,
+    cursor_position: (f64, f64),
 }
 
 const VERTEX_SHADER_SOURCE: &[u8] = b"
@@ -71,6 +74,7 @@ fn main() {
         height: 720,
         window_width: 1280,
         window_height: 720,
+        cursor_position: (0.0, 0.0),
     };
 
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS)
@@ -121,12 +125,12 @@ fn main() {
 
     while !window.should_close() {
         let start_frame_time = Instant::now();
-        let cursor_position = get_mouse_position(&app, &window);
+        app.cursor_position = get_mouse_position(&app, &window);
         for (_, event) in glfw::flush_messages(&events) {
             handle_window_event(&mut app, &mut window, event);
         }
 
-        screen.update(delta_time, &app, cursor_position);
+        screen.update(delta_time, &app);
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
