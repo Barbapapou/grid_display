@@ -6,8 +6,8 @@ use crate::util::Vector2;
 
 pub struct Screen {
     pub grid: Grid,
-    grid_width: u32,
-    grid_height: u32,
+    pub grid_width: u32,
+    pub grid_height: u32,
     pub ui_elements: Vec<Box<dyn UiElement>>,
 }
 
@@ -23,6 +23,13 @@ impl Screen {
             Box::new(UiText::new_basic(String::from("<Hello from the whole world>"), Vector2 {x: 15, y: 18})),
         ];
 
+        let mut delta_time = UiText::new_box(String::from(""), Vector2 {x: 1, y: 1}, BoxDrawing::Double);
+        delta_time.update_function = |ui_text: &mut UiText, app: &Application, grid: &Grid| {
+            let delta_time_str = format!("{} ms", app.delta_time);
+            ui_text.text = delta_time_str;
+        };
+        ui_elements.push(Box::new(delta_time));
+
         let mut mouse_pos = UiText::new_basic(String::from(""), Vector2 {x: 0, y: 3});
         mouse_pos.update_function = |ui_text: &mut UiText, app: &Application, grid: &Grid| {
             let mouse_pos_str = format!("Mouse coordinate: {}, {}", app.cursor_position.0, app.cursor_position.1);
@@ -37,6 +44,7 @@ impl Screen {
             let mouse_pos_str = format!("Grid coordinate: {grid_pos_x}, {grid_pos_y}");
             ui_text.text = mouse_pos_str;
         };
+        ui_elements.push(Box::new(grid_pos));
 
         Screen {
             grid,
@@ -46,7 +54,7 @@ impl Screen {
         }
     }
 
-    pub fn update(&mut self, delta_time: u128, app: &Application) {
+    pub fn update(&mut self, app: &Application) {
         self.grid.clear();
 
         for ui_element in self.ui_elements.as_mut_slice() {
@@ -54,17 +62,8 @@ impl Screen {
             ui_element.draw(&mut self.grid);
         }
 
-        let delta_time_str = format!("{delta_time} ms");
-        let delta_time_ui_text = UiText::new_box(delta_time_str, Vector2 {x:1, y:1}, BoxDrawing::Arc);
-        delta_time_ui_text.draw(&mut self.grid);
-
-        let mouse_pos_x = app.cursor_position.0;
-        let mouse_pos_y = app.cursor_position.1;
-        let grid_pos_x = (mouse_pos_x / app.width as f64 * self.grid_width as f64).floor() as i32;
-        let grid_pos_y = (mouse_pos_y / app.height as f64 * self.grid_height as f64).floor() as i32;
-
-        if grid_pos_x >= 0 && grid_pos_x < self.grid_width as i32 && grid_pos_y >= 0 && grid_pos_y < self.grid_height as i32 {
-            self.grid.inverse_color_at(grid_pos_x, grid_pos_y);
+        if app.grid_position.0 >= 0 && app.grid_position.0 < self.grid_width as i32 && app.grid_position.1 >= 0 && app.grid_position.1 < self.grid_height as i32 {
+            self.grid.inverse_color_at(app.grid_position.0, app.grid_position.1);
         }
     }
 }

@@ -30,6 +30,8 @@ pub struct Application {
     window_width: u32,
     window_height: u32,
     cursor_position: (f64, f64),
+    grid_position: (i32, i32),
+    delta_time: u128,
 }
 
 const VERTEX_SHADER_SOURCE: &[u8] = b"
@@ -75,6 +77,8 @@ fn main() {
         window_width: 1280,
         window_height: 720,
         cursor_position: (0.0, 0.0),
+        grid_position: (0, 0),
+        delta_time: 0,
     };
 
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS)
@@ -121,16 +125,20 @@ fn main() {
     }
 
     let mut screen = Screen::new(shader_program);
-    let mut delta_time = 0;
 
     while !window.should_close() {
         let start_frame_time = Instant::now();
         app.cursor_position = get_mouse_position(&app, &window);
+
+        let grid_pos_x = (app.cursor_position.0 / app.width as f64 * screen.grid_width as f64).floor() as i32;
+        let grid_pos_y = (app.cursor_position.1 / app.height as f64 * screen.grid_height as f64).floor() as i32;
+        app.grid_position = (grid_pos_x, grid_pos_y);
+
         for (_, event) in glfw::flush_messages(&events) {
             handle_window_event(&mut app, &mut window, event);
         }
 
-        screen.update(delta_time, &app);
+        screen.update(&app);
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -139,7 +147,7 @@ fn main() {
 
         window.swap_buffers();
         glfw.poll_events();
-        delta_time = start_frame_time.elapsed().as_millis();
+        app.delta_time = start_frame_time.elapsed().as_millis();
     }
 }
 
