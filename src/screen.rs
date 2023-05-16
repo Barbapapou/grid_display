@@ -23,6 +23,10 @@ impl Screen {
             Box::new(UiText::new(String::from("<Hello from the whole world>"), Vector2 {x: 15, y: 18})),
         ];
 
+        let mut lorem_ispum = Box::new(UiText::new(String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse mi nisl, porta at mollis sit amet, tempor id nunc. Pellentesque mi nisi, congue a sem ut, vulputate fermentum lacus. Integer eu eleifend massa. Ut eget porttitor sapien. Donec lacus elit, aliquet ut massa et, tristique imperdiet ex. Vestibulum lectus massa, consequat a enim vel, volutpat maximus ligula. Integer viverra mollis consectetur."), Vector2 {x: 0, y: 30}));
+        lorem_ispum.size_limit = Some(10);
+        ui_elements.push(lorem_ispum);
+
         let mut delta_time = UiText::new(String::from(""), Vector2 {x: 1, y: 1});
         delta_time.update_function = |ui_text: &mut UiText, app: &Application, _grid: &Grid| {
             let delta_time_str = format!("{} ms", app.delta_time);
