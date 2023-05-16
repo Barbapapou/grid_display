@@ -3,7 +3,6 @@ use std::mem::size_of;
 use std::ptr;
 use gl::types::*;
 use rand::{Rng, thread_rng};
-use crate::Application;
 use crate::box_drawing::BoxDrawing;
 use crate::cache_glyph::CacheGlyph;
 use crate::quad::Quad;
@@ -285,8 +284,37 @@ impl Grid {
         std::mem::swap(&mut quad.fg_color, &mut quad.bg_color);
     }
 
-    pub fn switch_bg_at(&mut self, x: i32, y: i32, color: [f32;4]) {
+    pub fn inverse_color_from_to(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32) {
+        for x in x_start..x_end {
+            for y in y_start..y_end {
+                let quad = &mut self.quads.as_mut_slice()[(x + y * self.width as i32) as usize];
+                std::mem::swap(&mut quad.fg_color, &mut quad.bg_color);
+            }
+        }
+    }
+
+    pub fn set_fg_at(&mut self, x: i32, y: i32, color: [f32;4]) {
+        self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_fg_color(color);
+    }
+
+    pub fn set_fg_from_to(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32, color: [f32;4]) {
+        for x in x_start..x_end {
+            for y in y_start..y_end {
+                self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_fg_color(color);
+            }
+        }
+    }
+
+    pub fn set_bg_at(&mut self, x: i32, y: i32, color: [f32;4]) {
         self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_bg_color(color);
+    }
+
+    pub fn set_bg_from_to(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32, color: [f32;4]) {
+        for x in x_start..x_end {
+            for y in y_start..y_end {
+                self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_bg_color(color);
+            }
+        }
     }
 
     pub fn shuffle_glyph(&mut self) {

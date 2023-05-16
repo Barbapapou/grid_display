@@ -19,25 +19,27 @@ impl Screen {
 
         let grid = Grid::new(grid_width, grid_height, shader_program);
         let mut ui_elements: Vec<Box<dyn UiElement>> = vec![
-            Box::new(UiText::new_basic(String::from("<Hello world>"), Vector2 {x: 15, y: 15})),
-            Box::new(UiText::new_basic(String::from("<Hello from the whole world>"), Vector2 {x: 15, y: 18})),
+            Box::new(UiText::new(String::from("<Hello world>"), Vector2 {x: 15, y: 15})),
+            Box::new(UiText::new(String::from("<Hello from the whole world>"), Vector2 {x: 15, y: 18})),
         ];
 
-        let mut delta_time = UiText::new_box(String::from(""), Vector2 {x: 1, y: 1}, BoxDrawing::Double);
-        delta_time.update_function = |ui_text: &mut UiText, app: &Application, grid: &Grid| {
+        let mut delta_time = UiText::new(String::from(""), Vector2 {x: 1, y: 1});
+        delta_time.update_function = |ui_text: &mut UiText, app: &Application, _grid: &Grid| {
             let delta_time_str = format!("{} ms", app.delta_time);
             ui_text.text = delta_time_str;
         };
+        delta_time.box_around = true;
+        delta_time.box_type = BoxDrawing::Double;
         ui_elements.push(Box::new(delta_time));
 
-        let mut mouse_pos = UiText::new_basic(String::from(""), Vector2 {x: 0, y: 3});
-        mouse_pos.update_function = |ui_text: &mut UiText, app: &Application, grid: &Grid| {
+        let mut mouse_pos = UiText::new(String::from(""), Vector2 {x: 0, y: 3});
+        mouse_pos.update_function = |ui_text: &mut UiText, app: &Application, _grid: &Grid| {
             let mouse_pos_str = format!("Mouse coordinate: {}, {}", app.cursor_position.0, app.cursor_position.1);
             ui_text.text = mouse_pos_str;
         };
         ui_elements.push(Box::new(mouse_pos));
 
-        let mut grid_pos = UiText::new_basic(String::from(""), Vector2 {x: 0, y: 4});
+        let mut grid_pos = UiText::new(String::from(""), Vector2 {x: 0, y: 4});
         grid_pos.update_function = |ui_text: &mut UiText, app: &Application, grid: &Grid| {
             let grid_pos_x = (app.cursor_position.0 / app.width as f64 * grid.width as f64).floor() as i32;
             let grid_pos_y = (app.cursor_position.1 / app.height as f64 * grid.height as f64).floor() as i32;
