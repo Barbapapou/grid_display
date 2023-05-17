@@ -23,14 +23,15 @@ impl Screen {
             Box::new(UiText::new(String::from("<Hello from the whole world>"), Vector2 {x: 15, y: 18})),
         ];
 
-        let mut lorem_ispum = Box::new(UiText::new(String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse mi nisl, porta at mollis sit amet, tempor id nunc. Pellentesque mi nisi, congue a sem ut, vulputate fermentum lacus. Integer eu eleifend massa. Ut eget porttitor sapien. Donec lacus elit, aliquet ut massa et, tristique imperdiet ex. Vestibulum lectus massa, consequat a enim vel, volutpat maximus ligula. Integer viverra mollis consectetur."), Vector2 {x: 0, y: 30}));
-        lorem_ispum.size_limit = Some(10);
+        let mut lorem_ispum = Box::new(UiText::new(String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nSuspendisse mi nisl, porta at mollis sit amet, tempor id nunc.\nPellentesque mi nisi, congue a sem ut, vulputate fermentum lacus. Integer eu eleifend massa.\nUt eget porttitor sapien. Donec lacus elit, aliquet ut massa et, tristique imperdiet ex.\nVestibulum lectus massa, consequat a enim vel, volutpat maximus ligula.\nInteger viverra mollis consectetur."), Vector2 {x: 5, y: 30}));
+        lorem_ispum.box_around = true;
+        lorem_ispum.box_type = BoxDrawing::Double;
         ui_elements.push(lorem_ispum);
 
         let mut delta_time = UiText::new(String::from(""), Vector2 {x: 1, y: 1});
         delta_time.update_function = |ui_text: &mut UiText, app: &Application, _grid: &Grid| {
             let delta_time_str = format!("{} ms", app.delta_time);
-            ui_text.text = delta_time_str;
+            ui_text.set_text(delta_time_str);
         };
         delta_time.box_around = true;
         delta_time.box_type = BoxDrawing::Double;
@@ -39,7 +40,7 @@ impl Screen {
         let mut mouse_pos = UiText::new(String::from(""), Vector2 {x: 0, y: 3});
         mouse_pos.update_function = |ui_text: &mut UiText, app: &Application, _grid: &Grid| {
             let mouse_pos_str = format!("Mouse coordinate: {}, {}", app.cursor_position.0, app.cursor_position.1);
-            ui_text.text = mouse_pos_str;
+            ui_text.set_text(mouse_pos_str);
         };
         ui_elements.push(Box::new(mouse_pos));
 
@@ -48,7 +49,7 @@ impl Screen {
             let grid_pos_x = (app.cursor_position.0 / app.width as f64 * grid.width as f64).floor() as i32;
             let grid_pos_y = (app.cursor_position.1 / app.height as f64 * grid.height as f64).floor() as i32;
             let mouse_pos_str = format!("Grid coordinate: {grid_pos_x}, {grid_pos_y}");
-            ui_text.text = mouse_pos_str;
+            ui_text.set_text(mouse_pos_str);
         };
         ui_elements.push(Box::new(grid_pos));
 
