@@ -7,13 +7,13 @@ pub struct UiText {
     text: String,
     lines: Vec<String>,
     max_line_len: i32,
-    pub pos: Vector2,
+    pos: Vector2,
     width_limit: Option<i32>,
     height_limit: Option<i32>,
     pub fg_color: [f32; 4],
     pub bg_color: [f32; 4],
-    pub box_around: bool,
-    pub box_type: BoxDrawing,
+    box_around: bool,
+    box_type: BoxDrawing,
     pub update_function: fn(&mut UiText, &Application, &Grid),
     is_highlighted: bool,
     pub highlight_on_hover: bool,
@@ -63,12 +63,17 @@ impl UiText {
         self.lines = text.lines().map(|line| line.to_string()).collect();
         self.max_line_len = self.lines.iter().map(|line| line.len()).max().unwrap_or(0) as i32;
     }
+
+    pub fn set_box_drawing(&mut self, enable: bool, box_type: BoxDrawing) {
+        self.box_around = enable;
+        self.box_type = box_type;
+    }
 }
 
 impl UiElement for UiText {
     fn draw(&self, grid: &mut Grid) {
-        for (index, line) in self.lines.iter().enumerate() {
-            let y = self.pos.y - index as i32;
+        for (y_offset, line) in self.lines.iter().enumerate() {
+            let y = self.pos.y - y_offset as i32;
             let len = self.get_text_len(line, grid.width as i32);
             let text = self.truncate_text(line, len);
             grid.write_at(self.pos.x, y, &text);

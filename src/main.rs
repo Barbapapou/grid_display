@@ -9,7 +9,6 @@ mod grid;
 mod gl_error_check;
 mod cache_glyph;
 mod util;
-mod ui_paragraph;
 
 extern crate gl;
 extern crate glfw;

@@ -24,8 +24,7 @@ impl Screen {
         ];
 
         let mut lorem_ispum = Box::new(UiText::new(String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nSuspendisse mi nisl, porta at mollis sit amet, tempor id nunc.\nPellentesque mi nisi, congue a sem ut, vulputate fermentum lacus. Integer eu eleifend massa.\nUt eget porttitor sapien. Donec lacus elit, aliquet ut massa et, tristique imperdiet ex.\nVestibulum lectus massa, consequat a enim vel, volutpat maximus ligula.\nInteger viverra mollis consectetur."), Vector2 {x: 5, y: 30}));
-        lorem_ispum.box_around = true;
-        lorem_ispum.box_type = BoxDrawing::Double;
+        lorem_ispum.set_box_drawing(true, BoxDrawing::Arc);
         ui_elements.push(lorem_ispum);
 
         let mut delta_time = UiText::new(String::from(""), Vector2 {x: 1, y: 1});
@@ -33,8 +32,7 @@ impl Screen {
             let delta_time_str = format!("{} ms", app.delta_time);
             ui_text.set_text(delta_time_str);
         };
-        delta_time.box_around = true;
-        delta_time.box_type = BoxDrawing::Double;
+        delta_time.set_box_drawing(true, BoxDrawing::Double);
         ui_elements.push(Box::new(delta_time));
 
         let mut mouse_pos = UiText::new(String::from(""), Vector2 {x: 0, y: 3});
@@ -69,8 +67,8 @@ impl Screen {
             ui_element.draw(&mut self.grid);
         }
 
-        if app.grid_position.0 >= 0 && app.grid_position.0 < self.grid_width as i32 && app.grid_position.1 >= 0 && app.grid_position.1 < self.grid_height as i32 {
-            self.grid.inverse_color_at(app.grid_position.0, app.grid_position.1);
-        }
+        // if app.grid_position.0 >= 0 && app.grid_position.0 < self.grid_width as i32 && app.grid_position.1 >= 0 && app.grid_position.1 < self.grid_height as i32 {
+        //     self.grid.inverse_color_at(app.grid_position.0, app.grid_position.1);
+        // }
     }
 }
