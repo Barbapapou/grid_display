@@ -6,6 +6,7 @@ use rand::{Rng, thread_rng};
 use crate::box_drawing::BoxDrawing;
 use crate::cache_glyph::CacheGlyph;
 use crate::quad::Quad;
+use crate::util::Vector2;
 
 pub struct Grid {
     pub width: u32,
@@ -234,10 +235,10 @@ impl Grid {
         }
     }
 
-    pub fn write_at(&mut self, x: i32, y: i32, text: &str) {
+    pub fn write_at(&mut self, pos: Vector2, text: &str) {
         let text_vec: Vec<char> = text.chars().collect();
         let mut text_len = text_vec.len() as i32;
-        let start_position = y * self.width as i32 + x;
+        let start_position = pos.y * self.width as i32 + pos.x;
         if start_position + text_len > self.quads.len() as i32 - 1 {
             let to_trim = start_position + (text_len - 1) - (self.quads.len() as i32 - 1);
             text_len -= to_trim;
