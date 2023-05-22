@@ -23,6 +23,7 @@ use std::time::Instant;
 use rusttype::Font;
 use crate::grid::Grid;
 use crate::screen::Screen;
+use crate::util::{Vector2, Vector2d};
 
 pub struct Application {
     aspect_ratio: f32,
@@ -30,8 +31,8 @@ pub struct Application {
     height: u32,
     window_width: u32,
     window_height: u32,
-    cursor_position: (f64, f64),
-    grid_position: (i32, i32),
+    cursor_position: Vector2d,
+    grid_position: Vector2,
     delta_time: u128,
 }
 
@@ -77,8 +78,8 @@ fn main() {
         height: 720,
         window_width: 1280,
         window_height: 720,
-        cursor_position: (0.0, 0.0),
-        grid_position: (0, 0),
+        cursor_position: Vector2d::new(0.0, 0.0),
+        grid_position: Vector2::new(0, 0),
         delta_time: 0,
     };
 
@@ -131,9 +132,9 @@ fn main() {
         let start_frame_time = Instant::now();
         app.cursor_position = get_mouse_position(&app, &window);
 
-        let grid_pos_x = (app.cursor_position.0 / app.width as f64 * screen.grid_width as f64).floor() as i32;
-        let grid_pos_y = (app.cursor_position.1 / app.height as f64 * screen.grid_height as f64).floor() as i32;
-        app.grid_position = (grid_pos_x, grid_pos_y);
+        let grid_pos_x = (app.cursor_position.x / app.width as f64 * screen.grid_width as f64).floor() as i32;
+        let grid_pos_y = (app.cursor_position.y / app.height as f64 * screen.grid_height as f64).floor() as i32;
+        app.grid_position = Vector2::new(grid_pos_x, grid_pos_y);
 
         for (_, event) in glfw::flush_messages(&events) {
             handle_window_event(&mut app, &mut window, event);
@@ -160,13 +161,13 @@ fn handle_window_event(app: &mut Application, window: &mut Window, event: glfw::
     }
 }
 
-fn get_mouse_position(app: &Application, window: &Window) -> (f64, f64) {
+fn get_mouse_position(app: &Application, window: &Window) -> Vector2d {
     let window_offset_x = (app.window_width - app.width)/2;
     let window_offset_y = (app.window_height - app.height)/2;
     let (mouse_pos_x, mouse_pos_y) = window.get_cursor_pos();
     let mouse_pos_x = mouse_pos_x - window_offset_x as f64;
     let mouse_pos_y = (app.height as f64 + window_offset_y as f64) - mouse_pos_y;
-    (mouse_pos_x, mouse_pos_y)
+    Vector2d::new(mouse_pos_x, mouse_pos_y)
 }
 
 fn framebuffer_resize_event(app: &mut Application, width: f32, height:f32) {

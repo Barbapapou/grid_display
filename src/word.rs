@@ -16,6 +16,10 @@ impl Word {
             if c.is_whitespace() || i == text.len() - 1 {
                 let new_line = c == '\n';
 
+                if i == text.len() - 1 {
+                    last_word.push(c);
+                }
+
                 let word = Word {
                     text: last_word.clone(),
                     pos: Vector2::new(x_pos, y_pos),
