@@ -3,6 +3,7 @@ use crate::util::Vector2;
 pub struct Word {
     pub text: String,
     pub pos: Vector2,
+    pub highlight: bool,
 }
 
 impl Word {
@@ -23,6 +24,7 @@ impl Word {
                 let word = Word {
                     text: last_word.clone(),
                     pos: Vector2::new(x_pos, y_pos),
+                    highlight: false,
                 };
 
                 words.push(word);

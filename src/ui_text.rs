@@ -16,6 +16,7 @@ pub struct UiText {
     pub update_function: fn(&mut UiText, &Application, &Grid),
     is_highlighted: bool,
     pub highlight_on_hover: bool,
+    pub highlight_word: bool,
 }
 
 impl UiText {
@@ -32,7 +33,8 @@ impl UiText {
             box_type: BoxDrawing::Light,
             update_function: |_ui_text: &mut UiText, _app: &Application, _grid: &Grid| {},
             is_highlighted: false,
-            highlight_on_hover: true,
+            highlight_on_hover: false,
+            highlight_word: true,
         }
     }
 
@@ -51,14 +53,20 @@ impl UiElement for UiText {
     fn draw(&self, grid: &mut Grid) {
         let start = Vector2::new(self.pos.x, self.pos.y - self.size.y + 1);
         let end = Vector2::new(self.pos.x + self.size.x, self.pos.y + 1);
+        // set color
         grid.set_fg_from_to(start, end, self.fg_color);
         grid.set_bg_from_to(start, end, self.bg_color);
-
+        // draw words
         for word in self.words.iter() {
-            if word.pos.y < self.pos.y - self.size.y {
+            if word.pos.y < self.pos.y - self.size.y + 1 {
                 break;
             }
             grid.write_at(word.pos, &word.text);
+            if word.highlight {
+                let start_word = Vector2::new(word.pos.x, word.pos.y);
+                let end_word = Vector2::new(word.pos.x + word.text.len() as i32, word.pos.y + 1);
+                grid.inverse_color_from_to(start_word, end_word);
+            }
         }
 
         if self.box_around {
@@ -66,24 +74,34 @@ impl UiElement for UiText {
             let end_box = Vector2::new(self.pos.x + self.size.x, self.pos.y + 1);
             grid.write_box(start_box, end_box, self.box_type);
         }
+
+        if self.is_highlighted {
+            grid.inverse_color_from_to(start, end);
+        }
     }
 
     fn update(&mut self, app: &Application, grid: &Grid) {
         self.update_function.call_once((self, app, grid));
+        // highlight on hover whole element
         if self.highlight_on_hover {
             self.is_highlighted = self.is_mouse_on_element(app, grid);
+        }
+        // clean highlight
+        for word in self.words.iter_mut() {
+            word.highlight = false;
+        }
+        // highlight word
+        if self.highlight_word {
+            for word in self.words.iter_mut() {
+                if word.pos.x <= app.grid_position.x && word.pos.x + (word.text.len() as i32) > app.grid_position.x && word.pos.y == app.grid_position.y {
+                    word.highlight = true;
+                }
+            }
         }
     }
 
     fn is_mouse_on_element(&self, app: &Application, grid: &Grid) -> bool {
-        // for (index, line) in self.lines.iter().enumerate() {
-        //     let len = self.get_text_len(line, grid.width as i32);
-        //     let y = self.pos.y - index as i32;
-        //     if self.pos.x <= app.grid_position.0 && app.grid_position.0 < self.pos.x + len
-        //         && y <= app.grid_position.1 && app.grid_position.1 < y + 1 {
-        //         return true;
-        //     }
-        // }
-        false
+        app.grid_position.x >= self.pos.x && app.grid_position.x < self.pos.x + self.size.x &&
+        app.grid_position.y > self.pos.y - self.size.y && app.grid_position.y <= self.pos.y
     }
 }
