@@ -1,13 +1,10 @@
 #![feature(fn_traits)]
 
-mod quad;
+mod render;
 mod box_drawing;
 mod ui_element;
 mod ui_text;
 mod screen;
-mod grid;
-mod gl_error_check;
-mod cache_glyph;
 mod util;
 mod word;
 
@@ -21,7 +18,7 @@ use std::ptr;
 use std::time::Instant;
 
 use rusttype::Font;
-use crate::grid::Grid;
+use crate::render::grid::Grid;
 use crate::screen::Screen;
 use crate::util::{Vector2, Vector2d};
 
