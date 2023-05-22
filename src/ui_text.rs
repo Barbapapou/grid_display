@@ -49,25 +49,23 @@ impl UiText {
 
 impl UiElement for UiText {
     fn draw(&self, grid: &mut Grid) {
+        let start = Vector2::new(self.pos.x, self.pos.y - self.size.y + 1);
+        let end = Vector2::new(self.pos.x + self.size.x, self.pos.y + 1);
+        grid.set_fg_from_to(start, end, self.fg_color);
+        grid.set_bg_from_to(start, end, self.bg_color);
+
         for word in self.words.iter() {
+            if word.pos.y < self.pos.y - self.size.y {
+                break;
+            }
             grid.write_at(word.pos, &word.text);
         }
-        //
-        // if self.box_around {
-        //     let mut width = self.max_line_len;
-        //     if let Some(width_limit) = self.width_limit {
-        //         if width_limit < width {
-        //             width = width_limit;
-        //         }
-        //     }
-        //     let mut height = y_offset;
-        //     if let Some(height_limit) = self.height_limit {
-        //         if height_limit < height {
-        //             height = height_limit;
-        //         }
-        //     }
-        //     grid.write_box(self.pos.x - 1, self.pos.y - height, self.pos.x + width, self.pos.y + 1, self.box_type);
-        // }
+
+        if self.box_around {
+            let start_box = Vector2::new(self.pos.x - 1, self.pos.y - self.size.y);
+            let end_box = Vector2::new(self.pos.x + self.size.x, self.pos.y + 1);
+            grid.write_box(start_box, end_box, self.box_type);
+        }
     }
 
     fn update(&mut self, app: &Application, grid: &Grid) {

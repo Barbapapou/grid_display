@@ -249,70 +249,70 @@ impl Grid {
         }
     }
 
-    pub fn write_box(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32, box_style: BoxDrawing) {
+    pub fn write_box(&mut self, start: Vector2, end: Vector2, box_style: BoxDrawing) {
         let char = self.quads.as_mut_slice();
         let (h_line, v_line, l_l_corner, u_l_corner, l_r_corner, u_r_corner) = BoxDrawing::get_char(box_style);
-        for x in x_start..=x_end {
-            for y in y_start..=y_end {
+        for x in start.x..=end.x {
+            for y in start.y..=end.y {
                 let index = (y * self.width as i32 + x) as usize;
-                if (x != x_start && x != x_end && y != y_start && y != y_end) || index > (self.width * self.height) as usize {
+                if (x != start.x && x != end.x && y != start.y && y != end.y) || index > (self.width * self.height) as usize {
                     continue;
                 }
-                if x == x_start && y == y_start {
+                if x == start.x && y == start.y {
                     char[index].switch_char(l_l_corner);
                 }
-                else if x == x_end && y == y_end {
+                else if x == end.x && y == end.y {
                     char[index].switch_char(u_r_corner);
                 }
-                else if x == x_start && y == y_end {
+                else if x == start.x && y == end.y {
                     char[index].switch_char(u_l_corner);
                 }
-                else if x == x_end && y == y_start {
+                else if x == end.x && y == start.y {
                     char[index].switch_char(l_r_corner);
                 }
-                else if x == x_start || x == x_end {
+                else if x == start.x || x == end.x {
                     char[index].switch_char(v_line);
                 }
-                else if y == y_start || y == y_end {
+                else if y == start.y || y == end.y {
                     char[index].switch_char(h_line);
                 }
             }
         }
     }
 
-    pub fn inverse_color_at(&mut self, x: i32, y: i32) {
-        let quad = &mut self.quads.as_mut_slice()[(x + y * self.width as i32) as usize];
+    pub fn inverse_color_at(&mut self, pos: Vector2) {
+        let quad = &mut self.quads.as_mut_slice()[(pos.x + pos.y * self.width as i32) as usize];
         std::mem::swap(&mut quad.fg_color, &mut quad.bg_color);
     }
 
-    pub fn inverse_color_from_to(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32) {
-        for x in x_start..x_end {
-            for y in y_start..y_end {
+    pub fn inverse_color_from_to(&mut self, start: Vector2, end: Vector2) {
+        for x in start.x..end.x {
+            for y in start.y..end.y {
                 let quad = &mut self.quads.as_mut_slice()[(x + y * self.width as i32) as usize];
                 std::mem::swap(&mut quad.fg_color, &mut quad.bg_color);
             }
         }
     }
 
-    pub fn set_fg_at(&mut self, x: i32, y: i32, color: [f32;4]) {
-        self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_fg_color(color);
+    pub fn set_fg_at(&mut self, pos: Vector2, color: [f32;4]) {
+        self.quads.as_mut_slice()[(pos.x + pos.y * self.width as i32) as usize].switch_fg_color(color);
     }
 
-    pub fn set_fg_from_to(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32, color: [f32;4]) {
-        for x in x_start..x_end {
-            for y in y_start..y_end {
+    pub fn set_fg_from_to(&mut self, start: Vector2, end: Vector2, color: [f32;4]) {
+        for x in start.x..end.x {
+            for y in start.y..end.y {
                 self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_fg_color(color);
             }
         }
     }
 
-    pub fn set_bg_at(&mut self, x: i32, y: i32, color: [f32;4]) {
-        self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_bg_color(color);
+    pub fn set_bg_at(&mut self, pos: Vector2, color: [f32;4]) {
+        self.quads.as_mut_slice()[(pos.x + pos.y * self.width as i32) as usize].switch_bg_color(color);
     }
 
-    pub fn set_bg_from_to(&mut self, x_start: i32, y_start: i32, x_end: i32, y_end: i32, color: [f32;4]) {
-        for x in x_start..x_end {
-            for y in y_start..y_end {
+    pub fn set_bg_from_to(&mut self, start: Vector2, end: Vector2, color: [f32;4]) {
+        for x in start.x..end.x {
+            for y in start.y..end.y {
                 self.quads.as_mut_slice()[(x + y * self.width as i32) as usize].switch_bg_color(color);
             }
         }
