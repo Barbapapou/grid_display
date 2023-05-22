@@ -61,10 +61,13 @@ impl UiElement for UiText {
             if word.pos.y < self.pos.y - self.size.y + 1 {
                 break;
             }
+            let start_word = Vector2::new(word.pos.x, word.pos.y);
+            let end_word = Vector2::new(word.pos.x + word.text.len() as i32, word.pos.y + 1);
             grid.write_at(word.pos, &word.text);
+            if let Some(color) = word.fg_color {
+                grid.set_fg_from_to(start_word, end_word, color.into());
+            }
             if word.highlight {
-                let start_word = Vector2::new(word.pos.x, word.pos.y);
-                let end_word = Vector2::new(word.pos.x + word.text.len() as i32, word.pos.y + 1);
                 grid.inverse_color_from_to(start_word, end_word);
             }
         }
