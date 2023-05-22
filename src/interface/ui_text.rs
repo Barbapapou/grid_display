@@ -1,8 +1,8 @@
 use crate::{Application, Grid};
-use crate::box_drawing::BoxDrawing;
-use crate::ui_element::UiElement;
+use crate::interface::box_drawing::BoxDrawing;
+use crate::interface::ui_element::UiElement;
 use crate::util::{Vector2};
-use crate::word::Word;
+use crate::interface::word::Word;
 
 pub struct UiText {
     text: String,

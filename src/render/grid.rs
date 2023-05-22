@@ -3,7 +3,7 @@ use std::mem::size_of;
 use std::ptr;
 use gl::types::*;
 use rand::{Rng, thread_rng};
-use crate::box_drawing::BoxDrawing;
+use crate::interface::box_drawing::BoxDrawing;
 use crate::render::cache_glyph::CacheGlyph;
 use crate::render::quad::Quad;
 use crate::util::Vector2;

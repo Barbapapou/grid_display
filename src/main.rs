@@ -1,12 +1,8 @@
 #![feature(fn_traits)]
 
 mod render;
-mod box_drawing;
-mod ui_element;
-mod ui_text;
-mod screen;
+mod interface;
 mod util;
-mod word;
 
 extern crate gl;
 extern crate glfw;
@@ -19,7 +15,7 @@ use std::time::Instant;
 
 use rusttype::Font;
 use crate::render::grid::Grid;
-use crate::screen::Screen;
+use crate::interface::screen::Screen;
 use crate::util::{Vector2, Vector2d};
 
 pub struct Application {
