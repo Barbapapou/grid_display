@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use std::ffi::c_void;
 use rusttype::{Point, Rect, Scale};
 use crate::UNIFONT;
-use crate::util::{UvLayout, Vector2f, RGBA8};
+use crate::util::rgba8::RGBA8;
+use crate::util::vector::{Vector2f, UvLayout};
 
 const SCALE_GLYPH: Scale = Scale{x:16.0, y:16.0};
 

@@ -6,7 +6,7 @@ use rand::{Rng, thread_rng};
 use crate::interface::box_drawing::BoxDrawing;
 use crate::render::cache_glyph::CacheGlyph;
 use crate::render::quad::Quad;
-use crate::util::Vector2;
+use crate::util::vector::Vector2;
 
 pub struct Grid {
     pub width: u32,

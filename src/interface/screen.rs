@@ -2,7 +2,7 @@ use crate::{Application, Grid};
 use crate::interface::box_drawing::BoxDrawing;
 use crate::interface::ui_element::UiElement;
 use crate::interface::ui_text::UiText;
-use crate::util::Vector2;
+use crate::util::vector::Vector2;
 
 pub struct Screen {
     pub grid: Grid,

@@ -1,4 +1,5 @@
-use crate::util::{RGBA8, Vector2};
+use crate::util::rgba8::RGBA8;
+use crate::util::vector::Vector2;
 
 pub struct Word {
     pub text: String,
