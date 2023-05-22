@@ -9,7 +9,7 @@ extern crate glfw;
 extern crate core;
 
 use gl::types::*;
-use glfw::{Action, Context, Glfw, Key, OpenGlProfileHint, SwapInterval, Window, WindowHint};
+use glfw::{Action, Context, Glfw, Key, MouseButton, OpenGlProfileHint, SwapInterval, Window, WindowHint};
 use std::ptr;
 use std::time::Instant;
 
@@ -27,6 +27,7 @@ pub struct Application {
     cursor_position: Vector2d,
     grid_position: Vector2,
     delta_time: u128,
+    mouse_left: i32,
 }
 
 const VERTEX_SHADER_SOURCE: &[u8] = b"
@@ -74,6 +75,7 @@ fn main() {
         cursor_position: Vector2d::new(0.0, 0.0),
         grid_position: Vector2::new(0, 0),
         delta_time: 0,
+        mouse_left: 0,
     };
 
     let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS)
@@ -86,6 +88,7 @@ fn main() {
         .expect("Failed to create GLFW window.");
 
     window.set_key_polling(true);
+    window.set_mouse_button_polling(true);
     window.make_current();
     window.set_framebuffer_size_polling(true);
     // window.set_size_limits(Some(1280), Some(720), None, None);
@@ -124,10 +127,12 @@ fn main() {
     while !window.should_close() {
         let start_frame_time = Instant::now();
         app.cursor_position = get_mouse_position(&app, &window);
-
+        // grid position
         let grid_pos_x = (app.cursor_position.x / app.width as f64 * screen.grid_width as f64).floor() as i32;
         let grid_pos_y = (app.cursor_position.y / app.height as f64 * screen.grid_height as f64).floor() as i32;
         app.grid_position = Vector2::new(grid_pos_x, grid_pos_y);
+
+        update_mouse_button_state(&mut app);
 
         for (_, event) in glfw::flush_messages(&events) {
             handle_window_event(&mut app, &mut window, event);
@@ -148,7 +153,12 @@ fn main() {
 
 fn handle_window_event(app: &mut Application, window: &mut Window, event: glfw::WindowEvent) {
     match event {
+        // keyboard event
         glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
+        // left mouse button
+        glfw::WindowEvent::MouseButton(MouseButton::Button1, Action::Press, _) => app.mouse_left = 1,
+        glfw::WindowEvent::MouseButton(MouseButton::Button1, Action::Release, _) => app.mouse_left = 0,
+        // window event
         glfw::WindowEvent::FramebufferSize(width, height) => framebuffer_resize_event(app, width as f32, height as f32),
         _ => {}
     }
@@ -161,6 +171,13 @@ fn get_mouse_position(app: &Application, window: &Window) -> Vector2d {
     let mouse_pos_x = mouse_pos_x - window_offset_x as f64;
     let mouse_pos_y = (app.height as f64 + window_offset_y as f64) - mouse_pos_y;
     Vector2d::new(mouse_pos_x, mouse_pos_y)
+}
+
+fn update_mouse_button_state(app: &mut Application) {
+    // mouse button
+    if app.mouse_left == 1 {
+        app.mouse_left += 1;
+    }
 }
 
 fn framebuffer_resize_event(app: &mut Application, width: f32, height:f32) {
@@ -249,5 +266,4 @@ fn load_gl_functions(window: &mut Window) {
     gl::Viewport::load_with(|_s| window.get_proc_address("glViewport"));
     gl::VertexAttribDivisor::load_with(|_s| window.get_proc_address("glVertexAttribDivisor"));
     gl::VertexAttribPointer::load_with(|_s| window.get_proc_address("glVertexAttribPointer"));
-
 }

@@ -5,13 +5,15 @@ pub struct Word {
     pub text: String,
     pub pos: Vector2,
     pub highlight: bool,
-    pub fg_color: Option<RGBA8>
+    pub fg_color: Option<RGBA8>,
+    pub action: Option<i32>,
 }
 
 enum ParsingMod {
     Word,
     GetParam,
     Color,
+    Action,
 }
 
 impl Word {
@@ -23,6 +25,7 @@ impl Word {
         let max_x = pos.x + size.x;
         let mut parsing_mod = ParsingMod::Word;
         let mut color = None;
+        let mut action = None;
         for (i, c) in text.chars().enumerate() {
             match parsing_mod {
                 ParsingMod::Word => {
@@ -41,6 +44,7 @@ impl Word {
                             pos: Vector2::new(x_pos, y_pos),
                             highlight: false,
                             fg_color: color,
+                            action,
                         };
 
                         if word.text.len() as i32 > 0 {
@@ -73,7 +77,17 @@ impl Word {
                         'k' => {
                             parsing_mod = ParsingMod::Word;
                             color = None;
+                            action = None;
                             last_word.clear();
+                        }
+                        // action flag (link)
+                        'l' => {
+                            parsing_mod = ParsingMod::Action;
+                            last_word.clear();
+                        }
+                        '`' => {
+                            parsing_mod = ParsingMod::Word;
+                            last_word.push(c);
                         }
                         // should crash
                         _ => {
@@ -91,6 +105,17 @@ impl Word {
                         color = Some(RGBA8::from_hex_string(&last_word));
                         last_word.clear();
                         parsing_mod = ParsingMod::Word;
+                    }
+                }
+                ParsingMod::Action => {
+                    if c.is_whitespace() {
+                        let num_action = last_word.parse::<i32>().expect("Failed to parse action");
+                        action = Some(num_action);
+                        last_word.clear();
+                        parsing_mod = ParsingMod::Word;
+                    }
+                    else {
+                        last_word.push(c);
                     }
                 }
             }

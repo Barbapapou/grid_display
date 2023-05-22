@@ -3,6 +3,7 @@ use crate::interface::box_drawing::BoxDrawing;
 use crate::interface::ui_element::UiElement;
 use crate::util::vector::{Vector2};
 use crate::interface::word::Word;
+use crate::util::rgba8::RGBA8;
 
 pub struct UiText {
     text: String,
@@ -97,11 +98,22 @@ impl UiElement for UiText {
             if self.highlight_on_hover {
                 self.is_highlighted = true;
             }
-            // highlight word
-            if self.highlight_word {
-                for word in self.words.iter_mut() {
-                    if word.pos.x <= app.grid_position.x && word.pos.x + (word.text.len() as i32) > app.grid_position.x && word.pos.y == app.grid_position.y {
-                        word.highlight = true;
+            // find hovered word if any
+            let mut hovered_word = None;
+            for word in self.words.iter_mut() {
+                if word.pos.x <= app.grid_position.x && word.pos.x + (word.text.len() as i32) > app.grid_position.x && word.pos.y == app.grid_position.y {
+                    hovered_word = Some(word);
+                }
+            }
+            if let Some(word) = hovered_word {
+                // highlight word
+                if self.highlight_word {
+                    word.highlight = true;
+                }
+                // check if mouse is clicked and if yes trigger word action
+                if let Some(action) = word.action {
+                    if app.mouse_left == 1 {
+                        println!("Word action: {}", action)
                     }
                 }
             }
