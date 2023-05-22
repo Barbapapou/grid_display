@@ -82,19 +82,24 @@ impl UiElement for UiText {
 
     fn update(&mut self, app: &Application, grid: &Grid) {
         self.update_function.call_once((self, app, grid));
-        // highlight on hover whole element
-        if self.highlight_on_hover {
-            self.is_highlighted = self.is_mouse_on_element(app, grid);
-        }
-        // clean highlight
+        // reset element highlight
+        self.is_highlighted = false;
+        // reset words highlight
         for word in self.words.iter_mut() {
             word.highlight = false;
         }
-        // highlight word
-        if self.highlight_word {
-            for word in self.words.iter_mut() {
-                if word.pos.x <= app.grid_position.x && word.pos.x + (word.text.len() as i32) > app.grid_position.x && word.pos.y == app.grid_position.y {
-                    word.highlight = true;
+        // check if mouse is on element and perform related actions
+        if self.is_mouse_on_element(app, grid) {
+            // highlight on hover whole element
+            if self.highlight_on_hover {
+                self.is_highlighted = true;
+            }
+            // highlight word
+            if self.highlight_word {
+                for word in self.words.iter_mut() {
+                    if word.pos.x <= app.grid_position.x && word.pos.x + (word.text.len() as i32) > app.grid_position.x && word.pos.y == app.grid_position.y {
+                        word.highlight = true;
+                    }
                 }
             }
         }
