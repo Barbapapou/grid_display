@@ -43,8 +43,10 @@ impl Word {
                             fg_color: color,
                         };
 
-                        words.push(word);
-                        x_pos += last_word.len() as i32 + 1;
+                        if word.text.len() as i32 > 0 {
+                            words.push(word);
+                            x_pos += last_word.len() as i32 + 1;
+                        }
                         last_word.clear();
 
                         if new_line {
@@ -62,12 +64,20 @@ impl Word {
                 }
                 ParsingMod::GetParam => {
                     match c {
+                        // color flag
                         'c' => {
                             parsing_mod = ParsingMod::Color;
                             last_word.clear();
                         }
-                        _ => {
+                        // clear flag
+                        'k' => {
                             parsing_mod = ParsingMod::Word;
+                            color = None;
+                            last_word.clear();
+                        }
+                        // should crash
+                        _ => {
+                            panic!("Invalid flag: {}", c);
                         }
                     }
                 }
