@@ -10,8 +10,8 @@ pub struct UiText {
     words: Vec<Word>,
     pos: Vector2,
     size: Vector2,
-    pub fg_color: [f32; 4],
-    pub bg_color: [f32; 4],
+    pub fg_color: RGBA8,
+    pub bg_color: RGBA8,
     box_around: bool,
     box_type: BoxDrawing,
     pub update_function: fn(&mut UiText, &Application, &Grid),
@@ -28,8 +28,8 @@ impl UiText {
             words,
             pos,
             size,
-            fg_color: [1.0, 1.0, 1.0, 1.0],
-            bg_color: [0.0, 0.0, 0.0, 1.0],
+            fg_color: RGBA8::new(255, 255, 255, 255),
+            bg_color: RGBA8::new(0, 0, 0, 255),
             box_around: false,
             box_type: BoxDrawing::Light,
             update_function: |_ui_text: &mut UiText, _app: &Application, _grid: &Grid| {},
@@ -55,8 +55,8 @@ impl UiElement for UiText {
         let start = Vector2::new(self.pos.x, self.pos.y - self.size.y + 1);
         let end = Vector2::new(self.pos.x + self.size.x, self.pos.y + 1);
         // set color
-        grid.set_fg_from_to(start, end, self.fg_color);
-        grid.set_bg_from_to(start, end, self.bg_color);
+        grid.set_fg_from_to(start, end, self.fg_color.into());
+        grid.set_bg_from_to(start, end, self.bg_color.into());
         // draw words
         for word in self.words.iter() {
             if word.pos.y < self.pos.y - self.size.y + 1 {
@@ -120,7 +120,7 @@ impl UiElement for UiText {
         }
     }
 
-    fn is_mouse_on_element(&self, app: &Application, grid: &Grid) -> bool {
+    fn is_mouse_on_element(&self, app: &Application, _grid: &Grid) -> bool {
         app.grid_position.x >= self.pos.x && app.grid_position.x < self.pos.x + self.size.x &&
         app.grid_position.y > self.pos.y - self.size.y && app.grid_position.y <= self.pos.y
     }
