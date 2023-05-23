@@ -6,6 +6,7 @@ use crate::interface::word::Word;
 use crate::util::rgba8::RGBA8;
 
 pub struct UiText {
+    id: u64,
     text: String,
     words: Vec<Word>,
     pos: Vector2,
@@ -24,6 +25,7 @@ impl UiText {
     pub fn new(text: String, pos: Vector2, size: Vector2) -> UiText {
         let words = Word::get_word_vec(&text, pos, size);
         UiText {
+            id: 0,
             text,
             words,
             pos,
@@ -123,5 +125,9 @@ impl UiElement for UiText {
     fn is_mouse_on_element(&self, app: &Application, _grid: &Grid) -> bool {
         app.grid_position.x >= self.pos.x && app.grid_position.x < self.pos.x + self.size.x &&
         app.grid_position.y > self.pos.y - self.size.y && app.grid_position.y <= self.pos.y
+    }
+
+    fn set_id(&mut self, id: u64) {
+        self.id = id;
     }
 }
