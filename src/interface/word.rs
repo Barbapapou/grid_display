@@ -1,3 +1,4 @@
+use crate::interface::ui_error::UiError;
 use crate::util::rgba8::RGBA8;
 use crate::util::vector::Vector2;
 
@@ -18,7 +19,7 @@ enum ParsingMod {
 }
 
 impl Word {
-    pub fn get_word_vec(text: &String, pos: Vector2, size: Vector2) -> Vec<Word> {
+    pub fn get_word_vec(text: &String, pos: Vector2, size: Vector2) -> Result<Vec<Word>, UiError> {
         let mut words = Vec::new();
         let mut last_word = String::new();
         let mut x_pos = pos.x;
@@ -130,13 +131,13 @@ impl Word {
                                 action = None;
                             }
                             _ => {
-                                panic!("Invalid clear flag: {}", c);
+                                return Err(UiError::Error(format!("Invalid clear flag {}", c)));
                             }
                         }
                     }
                 }
             }
         }
-        words
+        Ok(words)
     }
 }

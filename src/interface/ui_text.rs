@@ -3,6 +3,7 @@ use crate::{Application, Grid};
 use crate::interface::box_drawing::BoxDrawing;
 use crate::interface::ui_action::UiAction;
 use crate::interface::ui_element::UiElement;
+use crate::interface::ui_error::UiError;
 use crate::util::vector::{Vector2};
 use crate::interface::word::Word;
 use crate::util::rgba8::RGBA8;
@@ -25,9 +26,9 @@ pub struct UiText {
 }
 
 impl UiText {
-    pub fn new(text: String, pos: Vector2, size: Vector2) -> UiText {
-        let words = Word::get_word_vec(&text, pos, size);
-        UiText {
+    pub fn new(text: String, pos: Vector2, size: Vector2) -> Result<UiText, UiError> {
+        let words = Word::get_word_vec(&text, pos, size)?;
+        let ui_text = UiText {
             id: 0,
             text,
             words,
@@ -42,12 +43,14 @@ impl UiText {
             highlight_on_hover: false,
             highlight_word: true,
             actions: Vec::new(),
-        }
+        };
+        Ok(ui_text)
     }
 
-    pub fn set_text(&mut self, text: String) {
+    pub fn set_text(&mut self, text: String) -> Result<(), UiError>{
         self.text = text.clone();
-        self.words = Word::get_word_vec(&text, self.pos, self.size);
+        self.words = Word::get_word_vec(&text, self.pos, self.size)?;
+        Ok(())
     }
 
     pub fn set_box_drawing(&mut self, enable: bool, box_type: BoxDrawing) {
