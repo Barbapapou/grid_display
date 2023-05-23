@@ -14,6 +14,7 @@ enum ParsingMod {
     GetParam,
     Color,
     Action,
+    Clear,
 }
 
 impl Word {
@@ -75,9 +76,7 @@ impl Word {
                         }
                         // clear flag
                         'k' => {
-                            parsing_mod = ParsingMod::Word;
-                            color = None;
-                            action = None;
+                            parsing_mod = ParsingMod::Clear;
                             last_word.clear();
                         }
                         // action flag (link)
@@ -116,6 +115,24 @@ impl Word {
                     }
                     else {
                         last_word.push(c);
+                    }
+                }
+                ParsingMod::Clear => {
+                    if c.is_whitespace() {
+                        parsing_mod = ParsingMod::Word;
+                    }
+                    else {
+                        match c {
+                            'c' => {
+                                color = None;
+                            }
+                            'l' => {
+                                action = None;
+                            }
+                            _ => {
+                                panic!("Invalid clear flag: {}", c);
+                            }
+                        }
                     }
                 }
             }

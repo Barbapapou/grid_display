@@ -23,7 +23,7 @@ impl Screen {
             // Box::new(UiText::new(String::from("<Hello from the whole world>"), Vector2 {x: 15, y: 18})),
         ];
 
-        let mut lorem_ispum = Box::new(UiText::new(String::from("Lorem `cff00ff `l1 ipsum `k dolor sit amet, consectetur adipiscing elit.\nSuspendisse mi nisl, porta at mollis sit amet, tempor id nunc.\nPellentesque mi nisi, congue a sem ut, vulputate fermentum lacus. Integer eu eleifend massa.\nUt eget porttitor sapien. Donec lacus elit, aliquet ut massa et, tristique imperdiet ex.\nVestibulum lectus massa, consequat a enim vel, volutpat maximus ligula.\nInteger viverra mollis consectetur."), Vector2::new(5, 40), Vector2::new(30, 10)));
+        let mut lorem_ispum = Box::new(UiText::new(String::from("Lorem `cff00ff `l1 ipsum `kl dolor `kc sit amet, consectetur adipiscing elit.\nSuspendisse mi nisl, porta at mollis sit amet, tempor id nunc.\nPellentesque mi nisi, congue a sem ut, vulputate fermentum lacus. Integer eu eleifend massa.\nUt eget porttitor sapien. Donec lacus elit, aliquet ut massa et, tristique imperdiet ex.\nVestibulum lectus massa, consequat a enim vel, volutpat maximus ligula.\nInteger viverra mollis consectetur."), Vector2::new(5, 40), Vector2::new(30, 10)));
         lorem_ispum.set_box_drawing(true, BoxDrawing::Arc);
         ui_elements.push(lorem_ispum);
 
