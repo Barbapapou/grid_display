@@ -61,8 +61,10 @@ impl UiText {
 
 impl UiElement for UiText {
     fn draw(&self, grid: &mut Grid) {
-        let start = Vector2::new(self.pos.x, self.pos.y - self.size.y + 1);
-        let end = Vector2::new(self.pos.x + self.size.x, self.pos.y + 1);
+        let mut option = 0;
+        if self.box_around {option = 1}
+        let start = Vector2::new(self.pos.x - option, self.pos.y - self.size.y + 1 - option);
+        let end = Vector2::new(self.pos.x + self.size.x + option, self.pos.y + 1 + option);
         // set color
         grid.set_fg_from_to(start, end, self.fg_color.into());
         grid.set_bg_from_to(start, end, self.bg_color.into());
