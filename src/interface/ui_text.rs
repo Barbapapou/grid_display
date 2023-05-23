@@ -1,5 +1,7 @@
+use std::collections::VecDeque;
 use crate::{Application, Grid};
 use crate::interface::box_drawing::BoxDrawing;
+use crate::interface::ui_action::UiAction;
 use crate::interface::ui_element::UiElement;
 use crate::util::vector::{Vector2};
 use crate::interface::word::Word;
@@ -19,6 +21,7 @@ pub struct UiText {
     is_highlighted: bool,
     pub highlight_on_hover: bool,
     pub highlight_word: bool,
+    pub actions: Vec<UiAction>
 }
 
 impl UiText {
@@ -38,6 +41,7 @@ impl UiText {
             is_highlighted: false,
             highlight_on_hover: false,
             highlight_word: true,
+            actions: Vec::new(),
         }
     }
 
@@ -86,7 +90,7 @@ impl UiElement for UiText {
         }
     }
 
-    fn update(&mut self, app: &Application, grid: &Grid) {
+    fn update(&mut self, app: &Application, grid: &Grid, action_queue: &mut VecDeque<UiAction>) {
         self.update_function.call_once((self, app, grid));
         // reset element highlight
         self.is_highlighted = false;
@@ -115,7 +119,7 @@ impl UiElement for UiText {
                 // check if mouse is clicked and if yes trigger word action
                 if let Some(action) = word.action {
                     if app.mouse_left == 1 {
-                        println!("Word action: {}", action)
+                        action_queue.push_back(self.actions[action as usize].clone());
                     }
                 }
             }
