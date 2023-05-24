@@ -1,3 +1,4 @@
+use std::cmp::max;
 use std::collections::VecDeque;
 use crate::{Application, Grid};
 use crate::interface::box_drawing::BoxDrawing;
@@ -14,6 +15,8 @@ pub struct UiText {
     words: Vec<Word>,
     pos: Vector2,
     size: Vector2,
+    max_size: Vector2,
+    offset: Vector2,
     pub fg_color: RGBA8,
     pub bg_color: RGBA8,
     box_around: bool,
@@ -27,13 +30,15 @@ pub struct UiText {
 
 impl UiText {
     pub fn new(text: String, pos: Vector2, size: Vector2) -> Result<UiText, UiError> {
-        let words = Word::get_word_vec(&text, pos, size)?;
+        let (words, max_size) = Word::get_word_vec_and_max_size(&text, pos, size)?;
         let ui_text = UiText {
             id: 0,
             text,
             words,
             pos,
             size,
+            max_size,
+            offset: Vector2::new(0, 0),
             fg_color: RGBA8::new(255, 255, 255, 255),
             bg_color: RGBA8::new(0, 0, 0, 255),
             box_around: false,
@@ -49,7 +54,9 @@ impl UiText {
 
     pub fn set_text(&mut self, text: String) -> Result<(), UiError>{
         self.text = text.clone();
-        self.words = Word::get_word_vec(&text, self.pos, self.size)?;
+        let (words, max_size) = Word::get_word_vec_and_max_size(&text, self.pos, self.size)?;
+        self.words = words;
+        self.max_size = max_size;
         Ok(())
     }
 
@@ -70,12 +77,12 @@ impl UiElement for UiText {
         grid.set_bg_from_to(start, end, self.bg_color.into());
         // draw words
         for word in self.words.iter() {
-            if word.pos.y < self.pos.y - self.size.y + 1 {
-                break;
+            if word.pos.y < self.pos.y - self.size.y + 1 - self.offset.y || word.pos.y > self.pos.y - self.offset.y {
+                continue;
             }
-            let start_word = Vector2::new(word.pos.x, word.pos.y);
-            let end_word = Vector2::new(word.pos.x + word.text.len() as i32, word.pos.y + 1);
-            grid.write_at(word.pos, &word.text);
+            let start_word = Vector2::new(word.pos.x, word.pos.y) + self.offset;
+            let end_word = Vector2::new(word.pos.x + word.text.len() as i32, word.pos.y + 1) + self.offset;
+            grid.write_at(word.pos + self.offset, &word.text);
             if let Some(color) = word.fg_color {
                 grid.set_fg_from_to(start_word, end_word, color.into());
             }
@@ -101,6 +108,7 @@ impl UiElement for UiText {
         self.update_function.call_once((self, app, grid))?;
         // reset element highlight
         self.is_highlighted = false;
+        self.offset.y = (self.offset.y + 1) % self.max_size.y;
         // reset words highlight
         for word in self.words.iter_mut() {
             word.highlight = false;
@@ -142,5 +150,21 @@ impl UiElement for UiText {
 
     fn set_id(&mut self, id: u64) {
         self.id = id;
+    }
+
+    fn get_pos(&self) -> Vector2 {
+        Vector2::new(self.pos.x, self.pos.y - self.size.y + 1)
+    }
+
+    fn get_size(&self) -> Vector2 {
+        self.size
+    }
+
+    fn get_max_size(&self) -> Vector2 {
+        self.max_size
+    }
+
+    fn get_offset(&self) -> Vector2 {
+        self.offset
     }
 }

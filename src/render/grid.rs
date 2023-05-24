@@ -280,6 +280,15 @@ impl Grid {
         }
     }
 
+    pub fn write_from_to(&mut self, start: Vector2, end: Vector2, c: char) {
+        let char = self.quads.as_mut_slice();
+        for x in start.x..end.x {
+            for y in start.y..end.y {
+                char[(x + y * self.width as i32) as usize].switch_char(c);
+            }
+        }
+    }
+
     pub fn inverse_color_at(&mut self, pos: Vector2) {
         let quad = &mut self.quads.as_mut_slice()[(pos.x + pos.y * self.width as i32) as usize];
         std::mem::swap(&mut quad.fg_color, &mut quad.bg_color);

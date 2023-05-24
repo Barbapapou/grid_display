@@ -95,6 +95,7 @@ fn main() {
 
     load_gl_functions(&mut window);
     glfw.set_swap_interval(SwapInterval::None);
+    // glfw.set_swap_interval(SwapInterval::Sync(60));
 
     let vertex_shader: GLuint;
     let fragment_shader: GLuint;

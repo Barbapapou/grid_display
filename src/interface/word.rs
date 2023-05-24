@@ -19,6 +19,14 @@ enum ParsingMod {
 }
 
 impl Word {
+    pub fn get_word_vec_and_max_size(text: &String, pos: Vector2, size: Vector2) -> Result<(Vec<Word>, Vector2), UiError>
+    {
+        let words = Word::get_word_vec(text, pos, size)?;
+        let max_y = words.iter().map(|word| word.pos.y).max().unwrap_or(0);
+        let max_size = Vector2::new(size.x, (max_y - pos.y).max(size.y));
+        Ok((words, max_size))
+    }
+
     pub fn get_word_vec(text: &String, pos: Vector2, size: Vector2) -> Result<Vec<Word>, UiError> {
         let mut words = Vec::new();
         let mut last_word = String::new();
