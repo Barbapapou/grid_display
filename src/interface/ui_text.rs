@@ -18,7 +18,7 @@ pub struct UiText {
     pub bg_color: RGBA8,
     box_around: bool,
     box_type: BoxDrawing,
-    pub update_function: fn(&mut UiText, &Application, &Grid),
+    pub update_function: fn(&mut UiText, &Application, &Grid) -> Result<(), UiError>,
     is_highlighted: bool,
     pub highlight_on_hover: bool,
     pub highlight_word: bool,
@@ -38,7 +38,7 @@ impl UiText {
             bg_color: RGBA8::new(0, 0, 0, 255),
             box_around: false,
             box_type: BoxDrawing::Light,
-            update_function: |_ui_text: &mut UiText, _app: &Application, _grid: &Grid| {},
+            update_function: |_ui_text: &mut UiText, _app: &Application, _grid: &Grid| {Ok(())},
             is_highlighted: false,
             highlight_on_hover: false,
             highlight_word: true,
@@ -60,7 +60,7 @@ impl UiText {
 }
 
 impl UiElement for UiText {
-    fn draw(&self, grid: &mut Grid) {
+    fn draw(&self, grid: &mut Grid) -> Result<(), UiError> {
         let mut option = 0;
         if self.box_around {option = 1}
         let start = Vector2::new(self.pos.x - option, self.pos.y - self.size.y + 1 - option);
@@ -93,10 +93,12 @@ impl UiElement for UiText {
         if self.is_highlighted {
             grid.inverse_color_from_to(start, end);
         }
+        
+        Ok(())
     }
 
-    fn update(&mut self, app: &Application, grid: &Grid, action_queue: &mut VecDeque<UiAction>) {
-        self.update_function.call_once((self, app, grid));
+    fn update(&mut self, app: &Application, grid: &Grid, action_queue: &mut VecDeque<UiAction>) -> Result<(), UiError>{
+        self.update_function.call_once((self, app, grid))?;
         // reset element highlight
         self.is_highlighted = false;
         // reset words highlight
@@ -129,6 +131,8 @@ impl UiElement for UiText {
                 }
             }
         }
+        
+        Ok(())
     }
 
     fn is_mouse_on_element(&self, app: &Application, _grid: &Grid) -> bool {

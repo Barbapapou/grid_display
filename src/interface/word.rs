@@ -91,7 +91,7 @@ impl Word {
                         }
                         // should crash
                         _ => {
-                            panic!("Invalid flag: {}", c);
+                            return Err(UiError::Error(format!("Invalid flag {} at character {}", c, i)));
                         }
                     }
                 }
@@ -131,7 +131,7 @@ impl Word {
                                 action = None;
                             }
                             _ => {
-                                return Err(UiError::Error(format!("Invalid clear flag {}", c)));
+                                return Err(UiError::Error(format!("Invalid clear flag {} at character {}", c, i)));
                             }
                         }
                     }
