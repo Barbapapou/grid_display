@@ -20,6 +20,7 @@ impl<T> Vector2Generic<T> {
 impl<T: Add<Output = T>> Add<Vector2Generic<T>> for Vector2Generic<T> {
     type Output = Vector2Generic<T>;
 
+    #[inline]
     fn add(self, rhs: Vector2Generic<T>) -> Self::Output {
         Vector2Generic::new(self.x + rhs.x, self.y + rhs.y)
     }
@@ -37,6 +38,7 @@ impl<T: Sub<Output = T>> Sub<Vector2Generic<T>> for Vector2Generic<T> {
 impl<T: Mul<Output = T> + Copy> Mul<T> for Vector2Generic<T> {
     type Output = Vector2Generic<T>;
 
+    #[inline]
     fn mul(self, rhs: T) -> Self::Output {
         Vector2Generic::new(self.x * rhs, self.y * rhs)
     }
@@ -45,6 +47,7 @@ impl<T: Mul<Output = T> + Copy> Mul<T> for Vector2Generic<T> {
 impl<T: Div<Output = T> + Copy> Div<T> for Vector2Generic<T> {
     type Output = Vector2Generic<T>;
 
+    #[inline]
     fn div(self, rhs: T) -> Self::Output {
         Vector2Generic::new(self.x / rhs, self.y / rhs)
     }
