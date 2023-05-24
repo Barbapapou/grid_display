@@ -22,8 +22,8 @@ impl Word {
     pub fn get_word_vec_and_max_size(text: &String, pos: Vector2, size: Vector2) -> Result<(Vec<Word>, Vector2), UiError>
     {
         let words = Word::get_word_vec(text, pos, size)?;
-        let max_y = words.iter().map(|word| word.pos.y).max().unwrap_or(0);
-        let max_size = Vector2::new(size.x, (max_y - pos.y).max(size.y));
+        let max_y = words.iter().map(|word| word.pos.y).min().unwrap_or(0);
+        let max_size = Vector2::new(size.x, (pos.y - max_y + 1).max(size.y));
         Ok((words, max_size))
     }
 
@@ -46,6 +46,7 @@ impl Word {
                         let new_line = c == '\n';
 
                         if i == text.len() - 1 {
+                            // fixme what if the last char overflow the current line ?
                             last_word.push(c);
                         }
 
@@ -97,7 +98,6 @@ impl Word {
                             parsing_mod = ParsingMod::Word;
                             last_word.push(c);
                         }
-                        // should crash
                         _ => {
                             return Err(UiError::Error(format!("Invalid flag {} at character {}", c, i)));
                         }
@@ -117,6 +117,7 @@ impl Word {
                 }
                 ParsingMod::Action => {
                     if c.is_whitespace() {
+                        // todo propagate error
                         let num_action = last_word.parse::<i32>().expect("Failed to parse action");
                         action = Some(num_action);
                         last_word.clear();

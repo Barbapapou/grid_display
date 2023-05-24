@@ -108,7 +108,7 @@ impl UiElement for UiText {
         self.update_function.call_once((self, app, grid))?;
         // reset element highlight
         self.is_highlighted = false;
-        self.offset.y = (self.offset.y + 1) % self.max_size.y;
+        self.offset.y = (self.offset.y + 1) % (self.max_size.y - self.size.y + 1);
         // reset words highlight
         for word in self.words.iter_mut() {
             word.highlight = false;
@@ -122,7 +122,8 @@ impl UiElement for UiText {
             // find hovered word if any
             let mut hovered_word = None;
             for word in self.words.iter_mut() {
-                if word.pos.x <= app.grid_position.x && word.pos.x + (word.text.len() as i32) > app.grid_position.x && word.pos.y == app.grid_position.y {
+                let pos_word = word.pos + self.offset;
+                if pos_word.x <= app.grid_position.x && pos_word.x + (word.text.len() as i32) > app.grid_position.x && pos_word.y == app.grid_position.y {
                     hovered_word = Some(word);
                 }
             }
@@ -166,5 +167,9 @@ impl UiElement for UiText {
 
     fn get_offset(&self) -> Vector2 {
         self.offset
+    }
+
+    fn set_offset(&mut self, offset: Vector2) {
+        self.offset = offset;
     }
 }

@@ -14,4 +14,5 @@ pub trait UiElement {
     fn get_size(&self) -> Vector2;
     fn get_max_size(&self) -> Vector2;
     fn get_offset(&self) -> Vector2;
+    fn set_offset(&mut self, offset: Vector2);
 }

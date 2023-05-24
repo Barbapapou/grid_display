@@ -26,13 +26,20 @@ impl UiElement for UiViewport {
         // draw vertical scrollbar
         let pos = self.inside_element.get_pos();
         let size = self.inside_element.get_size();
+        let max_size = self.inside_element.get_max_size();
+        let offset = self.inside_element.get_offset();
         let background_start = Vector2::new(pos.x + size.x, pos.y);
         let background_end = Vector2::new(pos.x + size.x + 1, pos.y + size.y);
         // draw background
-        grid.write_from_to(background_start, background_end, '░');
+        grid.write_from_to(background_start, background_end, '▒');
+        // get size information
+        // fixme handle does not appear correct
+        let handle_size = (((size.y - 2) as f32 / max_size.y as f32) * (size.y - 2) as f32).floor() as i32;
+        let slide_portion = max_size.y as f32 - size.y as f32;
+        let handle_y = pos.y + size.y - ((offset.y as f32 / slide_portion) * slide_portion).floor() as i32;
         // draw handle
-        let handle_start = Vector2::new(pos.x + size.x, pos.y + size.y / 2);
-        let handle_end = Vector2::new(pos.x + size.x + 1, pos.y + size.y / 2 + 1);
+        let handle_start = Vector2::new(pos.x + size.x, handle_y - handle_size);
+        let handle_end = Vector2::new(pos.x + size.x + 1, handle_y);
         grid.write_from_to(handle_start, handle_end, '█');
         Ok(())
     }
@@ -65,5 +72,8 @@ impl UiElement for UiViewport {
 
     fn get_offset(&self) -> Vector2 {
         Vector2::new(0, 0)
+    }
+
+    fn set_offset(&mut self, _offset: Vector2) {
     }
 }
