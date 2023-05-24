@@ -93,7 +93,7 @@ impl UiElement for UiText {
         if self.is_highlighted {
             grid.inverse_color_from_to(start, end);
         }
-        
+
         Ok(())
     }
 
@@ -131,7 +131,7 @@ impl UiElement for UiText {
                 }
             }
         }
-        
+
         Ok(())
     }
 

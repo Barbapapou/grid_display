@@ -30,8 +30,13 @@ impl RGBA8 {
     }
 }
 
-impl Into<[f32; 4]> for RGBA8 {
-    fn into(self) -> [f32; 4] {
-        [self.r as f32 / 255.0, self.g as f32 / 255.0, self.b as f32 / 255.0, self.a as f32 / 255.0]
+impl From<RGBA8> for [f32; 4] {
+    fn from(value: RGBA8) -> Self {
+        [
+            value.r as f32 / 255.0,
+            value.g as f32 / 255.0,
+            value.b as f32 / 255.0,
+            value.a as f32 / 255.0,
+        ]
     }
 }
