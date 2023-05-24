@@ -5,7 +5,7 @@ use crate::interface::box_drawing::BoxDrawing;
 use crate::interface::ui_action::UiAction;
 use crate::interface::ui_element::UiElement;
 use crate::interface::ui_error::UiError;
-use crate::util::vector::{Vector2};
+use crate::util::vector2::{Vector2};
 use crate::interface::word::Word;
 use crate::util::rgba8::RGBA8;
 

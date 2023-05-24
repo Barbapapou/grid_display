@@ -16,7 +16,7 @@ use std::time::Instant;
 use rusttype::Font;
 use crate::render::grid::Grid;
 use crate::interface::screen::Screen;
-use crate::util::vector::{Vector2, Vector2d};
+use crate::util::vector2::{Vector2, Vector2d};
 
 pub struct Application {
     aspect_ratio: f32,

@@ -7,7 +7,7 @@ use crate::interface::ui_error::UiError;
 use crate::interface::ui_text::UiText;
 use crate::interface::ui_viewport::UiViewport;
 use crate::util::rgba8::RGBA8;
-use crate::util::vector::Vector2;
+use crate::util::vector2::{Vector2};
 
 pub struct Screen {
     pub grid: Grid,

@@ -1,6 +1,6 @@
 use crate::interface::ui_error::UiError;
 use crate::util::rgba8::RGBA8;
-use crate::util::vector::Vector2;
+use crate::util::vector2::{Vector2};
 
 pub struct Word {
     pub text: String,

@@ -4,7 +4,7 @@ use crate::interface::ui_action::UiAction;
 use crate::interface::ui_element::UiElement;
 use crate::interface::ui_error::UiError;
 use crate::render::grid::Grid;
-use crate::util::vector::Vector2;
+use crate::util::vector2::{Vector2};
 
 pub struct UiViewport {
     id: u64,

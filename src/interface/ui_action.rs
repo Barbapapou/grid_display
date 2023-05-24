@@ -1,5 +1,5 @@
 use crate::interface::ui_error::UiError;
-use crate::util::vector::Vector2;
+use crate::util::vector2::{Vector2};
 
 #[derive(Clone)]
 pub enum UiAction {

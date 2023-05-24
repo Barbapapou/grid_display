@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use crate::{Application, Grid};
 use crate::interface::ui_action::UiAction;
 use crate::interface::ui_error::UiError;
-use crate::util::vector::Vector2;
+use crate::util::vector2::{Vector2};
 
 pub trait UiElement {
     fn draw(&self, grid: &mut Grid) -> Result<(), UiError>;
