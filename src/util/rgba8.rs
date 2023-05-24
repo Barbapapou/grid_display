@@ -1,3 +1,4 @@
+use hex::FromHexError;
 use substring::Substring;
 
 #[derive(Copy, Clone)]
@@ -15,17 +16,17 @@ impl RGBA8 {
         Self {r, g, b, a}
     }
 
-    pub fn from_hex_string(input: &String) -> Self {
+    pub fn from_hex_string(input: &String) -> Result<Self, FromHexError> {
         let r = input.substring(0, 2);
-        let r = hex::decode(r).expect("Failed to decode the red component of the color");
+        let r = hex::decode(r)?;
         let r = r.iter().enumerate().map(|(i, v)| v << (i * 8)).sum();
         let g = input.substring(2, 4);
-        let g = hex::decode(g).expect("Failed to decode the green component of the color");
+        let g = hex::decode(g)?;
         let g = g.iter().enumerate().map(|(i, v)| v << (i * 8)).sum();
         let b = input.substring(4, 6);
-        let b = hex::decode(b).expect("Failed to decode the blue component of the color");
+        let b = hex::decode(b)?;
         let b = b.iter().enumerate().map(|(i, v)| v << (i * 8)).sum();
-        RGBA8 {r, g, b, a: 255}
+        Ok(RGBA8 {r, g, b, a: 255})
     }
 }
 

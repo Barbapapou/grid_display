@@ -102,7 +102,7 @@ impl Word {
                     }
                     else {
                         // register color
-                        color = Some(RGBA8::from_hex_string(&last_word));
+                        color = Some(RGBA8::from_hex_string(&last_word)?);
                         last_word.clear();
                         parsing_mod = ParsingMod::Word;
                     }
